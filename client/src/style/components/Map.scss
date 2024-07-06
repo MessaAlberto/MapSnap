@@ -1,0 +1,41 @@
+@import 'style/variables';
+
+#map {
+  position: absolute;
+  top: 0;
+  left: 3.5rem;
+  width: calc(100% - 3.5rem);
+  height: 100vh;
+  transition: width 0.3s ease, left 0.3s ease;
+  z-index: 0;
+}
+
+.ol-zoom {
+  position: absolute;
+  bottom: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1875rem;
+  
+  .ol-zoom-in,
+  .ol-zoom-out {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s;
+    font-size: 1.25rem;
+    
+    &:hover {
+      background-color: #0056b3;
+    }
+  }
+}

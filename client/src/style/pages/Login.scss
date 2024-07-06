@@ -1,0 +1,103 @@
+.login-page {
+  font-family: 'Arial', sans-serif;
+  background: radial-gradient(ellipse at bottom right, rgba(26, 89, 116, 0.4) 10%, rgba(138, 114, 76, 0) 40%), linear-gradient(to top, rgba(129, 185, 207, 0.25), rgba(42, 60, 87, 0.4)), linear-gradient(135deg, #701c00, #092756);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+
+  h1 {
+    text-align: center;
+    font-size: 2.25rem;
+    font-weight: 700;
+    margin-top: 3.125rem;
+    text-shadow: 0.125rem 0.125rem 0.25rem rgba(0, 0, 0, 0.5);
+    letter-spacing: 0.125rem;
+    color: #fff;
+  }
+
+  .login-form {
+    color: black;
+    width: 18.75rem;
+    margin: 1.25rem auto;
+    background: #fff;
+    padding: 1.25rem;
+    border-radius: 0.3125rem;
+    font-size: 0.875rem;
+
+    .form-field {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 1.25rem;
+
+      label {
+        width: 7.75rem;
+        color: #333;
+      }
+
+      input {
+        width: 100%;
+        padding: 0.625rem;
+        background-color: #f0f0f0;
+        color: #333;
+        border: none;
+        border-radius: 0.3125rem;
+        outline: none;
+
+        &:hover {
+          cursor: text;
+        }
+      }
+
+      i {
+        position: absolute;
+        right: 0.625rem;
+        top: 65%;
+        transform: translateY(-50%);
+        color: #3c3c3c;
+        font-size: 1rem;
+
+        &:hover {
+          cursor: pointer;
+        }
+      }
+    }
+
+    #errorMessage {
+      color: red;
+      font-size: 0.875rem;
+      margin-bottom: 0.625rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.625rem;
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 0.3125rem;
+      cursor: pointer;
+
+      &:hover {
+        background-color: #45a049;
+      }
+    }
+  }
+
+  p {
+    margin-top: 0.625rem;
+    font-size: 0.875rem;
+    color: #fff;
+
+    a {
+      color: #fff;
+      text-decoration: underline;
+
+      &:hover {
+        color: #45a049;
+      }
+    }
+  }
+}

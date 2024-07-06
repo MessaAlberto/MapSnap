@@ -1,0 +1,29 @@
+@import 'style/variables';
+
+*,
+*:before,
+*:after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+:root {
+    font-size: 1rem;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    color: white;
+    font-size: 1.125rem;
+    font-weight: 400;
+    overflow: hidden;
+    background: radial-gradient(ellipse at top left, rgba(111, 152, 169, 0.4) 10%, rgba(138, 114, 76, 0) 40%), linear-gradient(to left, rgba(57, 173, 219, .25), rgba(42, 60, 87, 0.4)), linear-gradient(135deg, #670d10, #274471);
+}
+
+.content {
+    margin-left: $sidebar-width;
+    height: 100vh;
+}

@@ -1,0 +1,206 @@
+@import 'style/variables';
+
+$sidebar-transition-duration: 300ms;
+$sidebar-z-index: 1;
+$sidebar-box-shadow: 0px 0px 0.625rem #333;
+$sidebar-background-color: $bg-color;
+
+$sidebar-menu-item-background: #1b5ac2;
+$sidebar-menu-item-hover-background: #3b8cf8;
+$sidebar-menu-item-active-background: #5fa2fc;
+$sidebar-menu-icon-size: 3.5rem;
+$sidebar-menu-item-height: 3.5rem;
+
+$input-padding: 0.5rem;
+$input-border-radius: 0.3125rem;
+$input-background-color: #fff;
+$input-text-color: #333;
+$input-focus-background-color: #f0f0f0;
+$input-focus-text-color: #000;
+$input-transition-duration: 0.3s;
+
+$logout-button-background: transparent;
+
+$spinner-top: 1.25rem;
+$spinner-right: 1.25rem;
+$spinner-z-index: 9999;
+
+nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: $sidebar-width;
+  height: 100%;
+  background: $sidebar-background-color;
+  transition: all $sidebar-transition-duration ease;
+  overflow: hidden;
+  z-index: $sidebar-z-index;
+  box-shadow: $sidebar-box-shadow;
+
+  &:hover {
+    width: calc(#{$sidebar-width} * 4);
+
+    .home-item {
+      width: calc(#{$sidebar-width} * 4);
+    }
+
+    .logout-item {
+      width: calc(#{$sidebar-width} * 4);
+    }
+  }
+
+  * {
+    user-select: none;
+  }
+
+  ul {
+    display: table;
+    width: calc(#{$sidebar-width} * 4);
+
+    &:hover {
+      background: $sidebar-menu-item-hover-background;
+    }
+
+    &:active {
+      background: $sidebar-menu-item-active-background;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+      background: $sidebar-menu-item-background;
+      cursor: pointer;
+      transition: all $sidebar-transition-duration ease;
+
+      &:hover {
+        background: $sidebar-menu-item-hover-background;
+      }
+
+      &:active {
+        background: $sidebar-menu-item-active-background;
+      }
+    }
+
+    .home-item, .logout-item {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #fff;
+      display: block;
+      height: $sidebar-menu-item-height;
+      width: $sidebar-width;
+      text-align: center;
+      text-decoration: none;
+  
+      span {
+        display: block;
+      }
+  
+      &:hover {
+        background: none;
+      }
+
+      #map-snap {
+        color: #fff;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: $sidebar-menu-item-height;
+      }
+    }
+
+    .menu-item {
+      >div:first-child {
+        height: $sidebar-menu-icon-size;
+        width: $sidebar-menu-icon-size;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      >div:nth-child(2) {
+        height: $sidebar-menu-item-height;
+        width: calc(#{$sidebar-width} * 3);
+        text-align: left;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+      }
+    }
+
+    .button-group {
+      display: flex !important;
+      justify-content: space-around;
+      align-items: center;
+    }
+
+    .login-button,
+    .signup-button {
+      background-color: #fff;
+      color: #1b5ac2;
+      border: 4px solid #1b5ac2;
+      padding: 0.3rem 0.7rem;
+      margin: 0.1rem;
+      border-radius: $input-border-radius;
+      cursor: pointer;
+      transition: background-color $input-transition-duration, color $input-transition-duration, border-color $input-transition-duration;
+
+      &:hover {
+        background-color: #5fa2fc;
+      }
+
+      &:active {
+        background-color: #3b8cf8;
+      }
+    }
+  }
+
+  .search-input,
+  .topics-input {
+    width: 95%;
+    padding: $input-padding;
+    border: none;
+    border-radius: $input-border-radius;
+    outline: none;
+    background-color: $input-background-color;
+    color: $input-text-color;
+    transition: background-color $input-transition-duration, color $input-transition-duration;
+    vertical-align: middle;
+
+    &:hover {
+      cursor: text;
+    }
+
+    &:focus {
+      background-color: $input-focus-background-color;
+      color: $input-focus-text-color;
+    }
+  }
+
+  ul.logout {
+    position: absolute;
+    bottom: 0;
+
+    #logout-button {
+      height: $sidebar-menu-item-height;
+      background: $logout-button-background;
+      color: #fff;
+      border: none;
+      padding: 0.5rem;
+      cursor: pointer;
+    }
+
+    
+  }
+}
+
+
+#spinner {
+  position: absolute;
+  top: $spinner-top;
+  right: $spinner-right;
+  z-index: $spinner-z-index;
+  display: none;
+}
