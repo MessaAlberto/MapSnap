@@ -7,6 +7,7 @@ export default function MapSnapMenuItem() {
   return (
     <li className="home-item">
       <Link id='map-snap' to={appRoutes.HOME}>
+      {/* <Link id='map-snap' to={appRoutes.MAP_SNAP}> */}
         <span>Map</span>
         <span>Snap</span>
       </Link>

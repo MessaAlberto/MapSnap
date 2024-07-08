@@ -1,7 +1,6 @@
 import AuthForm from 'components/AuthForm';
 import { authContext } from 'contexts/auth';
 import React, { useContext, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import 'style/pages/AuthPage.scss';
 
 const SignUp = () => {
@@ -13,7 +12,6 @@ const SignUp = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
   
-  const navigate = useNavigate();
   let timeOut = useRef(null);
 
   const handleSubmit = async (event) => {
@@ -28,8 +26,6 @@ const SignUp = () => {
         setError('Email is invalid or already taken.');
         return;
       }
-
-      navigate(`${appRoutes.LOGIN}?success=true`);
     } catch (error) {
       console.error('Error registering user:', error.message);
       setError('Error registering user. Please try again later.');

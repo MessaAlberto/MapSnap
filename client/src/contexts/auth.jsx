@@ -1,16 +1,25 @@
-import sha256 from 'crypto-js/sha256';
 import React, { createContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { API_ROUTES, APP_ROUTES } from '../../constants';
 
 export const authContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [currentUser, setCurrentUser] = useState(null);
-  console.log(currentUser);
+  const [currentUser, setCurrentUser] = useState(() => {
+    console.log('localStorage.getItem(user): ', localStorage.getItem('user'));
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  });
+  console.log('currentUser: ', currentUser);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
-    localStorage.setItem('user', JSON.stringify(currentUser));
-    setCurrentUser(null);
+    if (currentUser) {
+      localStorage.setItem('user', JSON.stringify(currentUser));
+    } else {
+      localStorage.removeItem('user');
+    }
   }, [currentUser]);
 
   async function login(user) {
@@ -20,26 +29,27 @@ export function AuthProvider({ children }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
       });
-  
+
       if (!res.ok) {
+        if (res.status === 401) {
+          return res.status;
+        }
         throw new Error('Failed to login');
       }
-  
+
       const data = await res.json();
-      setCurrentUser(data);
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('user', JSON.stringify(data));
+      setCurrentUser(data.user);
+      navigate(APP_ROUTES.HOME);
+      return res.status;
     } catch (error) {
       console.error('Error during login:', error.message);
       throw error;
     }
   }
-  
+
 
   async function register(user) {
     try {
-      const hashPassword = sha256(user.password).toString();
-      user.password = hashPassword;
       const res = await fetch(API_ROUTES.REGISTER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,7 +58,8 @@ export function AuthProvider({ children }) {
       if (res.status === 422) {
         return res;
       } else if (res.status === 201) {
-        return res;
+        navigate(APP_ROUTES.LOGIN + '?success=true');
+        return;
       } else {
         throw new Error('Error registering user');
       }
@@ -60,8 +71,20 @@ export function AuthProvider({ children }) {
 
   async function logout() {
     setCurrentUser(null);
-    //localStorage.clear();
-    useNavigate(appRoutes.HOME);
+    try {
+      const res = await fetch(API_ROUTES.LOGOUT, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        throw new Error('Failed to logout');
+      }
+      alert('You have been logged out');
+      navigate(APP_ROUTES.HOME);
+    } catch (error) {
+      console.error('Error during logout:', error.message);
+      throw error;
+    }
   }
 
   async function uniqueUsername(username) {

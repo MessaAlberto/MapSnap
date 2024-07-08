@@ -1,7 +1,7 @@
 import AuthForm from 'components/AuthForm';
 import { authContext } from 'contexts/auth';
 import React, { useContext, useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import 'style/pages/AuthPage.scss';
 
 const Login = () => {
@@ -11,7 +11,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
 
-  const navigate = useNavigate();
   const location = useLocation();
   const query = new URLSearchParams(location.search);
   const success = query.get('success');
@@ -30,8 +29,6 @@ const Login = () => {
         setError('Invalid credentials. Please try again.');
         return;
       }
-
-      navigate(appRoutes.HOME); 
     } catch (error) {
       console.error('Error logging in:', error.message);
       setError('Error logging in. Please try again later.');
