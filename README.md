@@ -1,6 +1,9 @@
 # MapSnap
 Explore the World through the Eyes of the Community.
 
+prova
+
+
 serve/package.json
 ```json
 {
