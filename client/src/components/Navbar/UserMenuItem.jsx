@@ -1,11 +1,11 @@
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { authContext } from 'contexts/auth';
-import React, { useContext } from 'react';
+import { UtilsContext } from 'contexts/utilsProvider';
+import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function UserMenuItem({ currentUser }) {
-  const { appRoutes } = useContext(authContext);
+  const { appRoutes } = React.useContext(UtilsContext);
   const renderContent = () => {
     if (currentUser) {
       return (

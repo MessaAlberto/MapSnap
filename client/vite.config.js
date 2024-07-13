@@ -1,6 +1,7 @@
 import react from '@vitejs/plugin-react-swc';
 import path from "node:path";
 import { defineConfig } from 'vite';
+import { EXPRESS_SERVER_API } from './constants';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -10,6 +11,7 @@ export default defineConfig({
       pages: path.resolve(__dirname, './src/pages'),
       contexts: path.resolve(__dirname, './src/contexts'),
       style: path.resolve(__dirname, './src/style'),
+      socketManager: path.resolve(__dirname, './socketManager.js'),
     },
   },
   plugins: [react()],
@@ -18,7 +20,7 @@ export default defineConfig({
     port: 5173,
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: EXPRESS_SERVER_API,
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),

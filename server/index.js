@@ -1,17 +1,30 @@
 require('dotenv').config();
 const http = require('http');
 const app = require('./app');
-const database = require('./database');
-const port = process.env.PORT || 3000;
-
 const server = http.createServer(app);
+const io = require('socket.io')(server);
+const db = require('./database');
+const { setupMQTTConnection } = require('./mqttManager');
+const { testS3Connection } = require('./s3Manager');
 
-// Avvio del server
+// Test S3 connection
+testS3Connection();
+
+// Setup MQTT server connection
+setupMQTTConnection(io);
+
+// Connect to the database
+db.query('SELECT NOW()')
+  .then(data => {
+    console.log('Connected to database. Current timestamp:', data[0].now);
+  })
+  .catch(error => {
+    console.error('Error connecting to database:', error);
+    process.exit(1);
+  });
+
+// Start the server
+const port = process.env.PORT || 3000;
 server.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });
-
-// Esempio di query al database
-database.query('SELECT NOW()', [])
-  .then(res => console.log(res.rows))
-  .catch(err => console.error('Error executing query', err.stack));

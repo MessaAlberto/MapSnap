@@ -1,10 +1,12 @@
 import AuthForm from 'components/AuthForm';
 import { authContext } from 'contexts/auth';
+import { UtilsContext } from 'contexts/utilsProvider';
 import React, { useContext, useRef, useState } from 'react';
 import 'style/pages/AuthPage.scss';
 
 const SignUp = () => {
-  const { appRoutes, register, uniqueUsername } = useContext(authContext);
+  const { register, uniqueUsername } = useContext(authContext);
+  const { appRoutes } = React.useContext(UtilsContext);
   
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');

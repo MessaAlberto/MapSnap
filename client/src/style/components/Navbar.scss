@@ -11,7 +11,9 @@ $sidebar-menu-item-active-background: #5fa2fc;
 $sidebar-menu-icon-size: 3.5rem;
 $sidebar-menu-item-height: 3.5rem;
 
+$input-margin: 0.5rem;
 $input-padding: 0.5rem;
+$input-height: 2rem;
 $input-border-radius: 0.3125rem;
 $input-background-color: #fff;
 $input-text-color: #333;
@@ -21,15 +23,13 @@ $input-transition-duration: 0.3s;
 
 $logout-button-background: transparent;
 
-$spinner-top: 1.25rem;
-$spinner-right: 1.25rem;
-$spinner-z-index: 9999;
 
 nav {
   position: fixed;
   top: 0;
   left: 0;
   width: $sidebar-width;
+  // width: calc(#{$sidebar-width} * 4); // useful for work on it
   height: 100%;
   background: $sidebar-background-color;
   transition: all $sidebar-transition-duration ease;
@@ -46,6 +46,17 @@ nav {
 
     .logout-item {
       width: calc(#{$sidebar-width} * 4);
+    }
+  }
+
+  // when not hovered
+  &:not(:hover) {
+    // disable menu-item
+    .menu-input {
+      display: none;
+    }
+    .start-research {
+      display: none;
     }
   }
 
@@ -81,7 +92,8 @@ nav {
       }
     }
 
-    .home-item, .logout-item {
+    .home-item,
+    .logout-item {
       font-size: 1.2rem;
       font-weight: bold;
       color: #fff;
@@ -90,11 +102,11 @@ nav {
       width: $sidebar-width;
       text-align: center;
       text-decoration: none;
-  
+
       span {
         display: block;
       }
-  
+
       &:hover {
         background: none;
       }
@@ -110,10 +122,14 @@ nav {
       }
     }
 
+    .home-item {
+      border-bottom: 1px solid #fff;
+    }
+
     .menu-item {
       >div:first-child {
         height: $sidebar-menu-icon-size;
-        width: $sidebar-menu-icon-size;
+        min-width: $sidebar-menu-icon-size;
         text-align: center;
         display: flex;
         justify-content: center;
@@ -121,12 +137,43 @@ nav {
       }
 
       >div:nth-child(2) {
-        height: $sidebar-menu-item-height;
         width: calc(#{$sidebar-width} * 3);
         text-align: left;
         display: flex;
         justify-content: flex-start;
         align-items: center;
+      }
+    }
+
+    .menu-input-container {
+      width: 80% !important;
+      height: $input-height;
+      padding-left: $input-margin;
+      padding-right: $input-margin;
+      margin-right: $input-margin;
+      gap: $input-margin;
+      border: none;
+      border-radius: $input-border-radius;
+      outline: none;
+      background-color: $input-background-color;
+      color: $input-text-color;
+      transition: background-color $input-transition-duration, color $input-transition-duration;
+      vertical-align: middle;
+
+      .menu-input {
+        width: 90%;
+        height: $input-height;
+        border: none;
+        border-radius: $input-border-radius;
+        outline: none;
+        background-color: $input-background-color;
+        color: $input-text-color;
+        transition: background-color $input-transition-duration, color $input-transition-duration;
+        vertical-align: middle;
+
+        &:hover {
+          cursor: text;
+        }
       }
     }
 
@@ -157,28 +204,6 @@ nav {
     }
   }
 
-  .search-input,
-  .topics-input {
-    width: 95%;
-    padding: $input-padding;
-    border: none;
-    border-radius: $input-border-radius;
-    outline: none;
-    background-color: $input-background-color;
-    color: $input-text-color;
-    transition: background-color $input-transition-duration, color $input-transition-duration;
-    vertical-align: middle;
-
-    &:hover {
-      cursor: text;
-    }
-
-    &:focus {
-      background-color: $input-focus-background-color;
-      color: $input-focus-text-color;
-    }
-  }
-
   ul.logout {
     position: absolute;
     bottom: 0;
@@ -191,16 +216,5 @@ nav {
       padding: 0.5rem;
       cursor: pointer;
     }
-
-    
   }
-}
-
-
-#spinner {
-  position: absolute;
-  top: $spinner-top;
-  right: $spinner-right;
-  z-index: $spinner-z-index;
-  display: none;
 }

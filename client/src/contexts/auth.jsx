@@ -1,10 +1,11 @@
-import React, { createContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { API_ROUTES, APP_ROUTES } from '../../constants';
+import { UtilsContext } from './utilsProvider';
 
 export const authContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const { apiRoutes, appRoutes } = useContext(UtilsContext);
   const [currentUser, setCurrentUser] = useState(() => {
     console.log('localStorage.getItem(user): ', localStorage.getItem('user'));
     const user = localStorage.getItem('user');
@@ -24,7 +25,7 @@ export function AuthProvider({ children }) {
 
   async function login(user) {
     try {
-      const res = await fetch(API_ROUTES.LOGIN, {
+      const res = await fetch(apiRoutes.LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
@@ -39,7 +40,7 @@ export function AuthProvider({ children }) {
 
       const data = await res.json();
       setCurrentUser(data.user);
-      navigate(APP_ROUTES.HOME);
+      window.location.reload();
       return res.status;
     } catch (error) {
       console.error('Error during login:', error.message);
@@ -50,7 +51,7 @@ export function AuthProvider({ children }) {
 
   async function register(user) {
     try {
-      const res = await fetch(API_ROUTES.REGISTER, {
+      const res = await fetch(apiRoutes.REGISTER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
@@ -58,7 +59,7 @@ export function AuthProvider({ children }) {
       if (res.status === 422) {
         return res;
       } else if (res.status === 201) {
-        navigate(APP_ROUTES.LOGIN + '?success=true');
+        navigate(appRoutes.LOGIN + '?success=true');
         return;
       } else {
         throw new Error('Error registering user');
@@ -72,7 +73,7 @@ export function AuthProvider({ children }) {
   async function logout() {
     setCurrentUser(null);
     try {
-      const res = await fetch(API_ROUTES.LOGOUT, {
+      const res = await fetch(apiRoutes.LOGOUT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -80,7 +81,7 @@ export function AuthProvider({ children }) {
         throw new Error('Failed to logout');
       }
       alert('You have been logged out');
-      navigate(APP_ROUTES.HOME);
+      window.location.reload();
     } catch (error) {
       console.error('Error during logout:', error.message);
       throw error;
@@ -89,7 +90,7 @@ export function AuthProvider({ children }) {
 
   async function uniqueUsername(username) {
     try {
-      const res = await fetch(`${API_ROUTES.CHECK_USERNAME}/${username}`);
+      const res = await fetch(`${apiRoutes.CHECK_USERNAME}/${username}`);
       if (res.status === 404) {
         return true;
       } else if (res.status === 200) {
@@ -104,8 +105,6 @@ export function AuthProvider({ children }) {
 
   return (
     <authContext.Provider value={{
-      apiRoutes: API_ROUTES,
-      appRoutes: APP_ROUTES,
       currentUser,
       login,
       register,

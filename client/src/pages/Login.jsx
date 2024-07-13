@@ -1,11 +1,13 @@
 import AuthForm from 'components/AuthForm';
 import { authContext } from 'contexts/auth';
+import { UtilsContext } from 'contexts/utilsProvider';
 import React, { useContext, useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import 'style/pages/AuthPage.scss';
 
 const Login = () => {
-  const { appRoutes, login } = useContext(authContext);
+  const { login } = useContext(authContext);
+  const { appRoutes } = React.useContext(UtilsContext);
 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');

@@ -13,3 +13,5 @@ export const APP_ROUTES = {
   SIGNUP: '/signup',
   MAP_SNAP: '/map-snap',
 };
+
+export const EXPRESS_SERVER_API = 'http://localhost:3000';

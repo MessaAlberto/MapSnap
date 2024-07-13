@@ -1,31 +1,27 @@
-import { faCircleNotch } from '@fortawesome/free-solid-svg-icons';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import Map from 'components/Map';
 import Navbar from 'components/Navbar/Navbar';
 import { authContext } from 'contexts/auth';
 import Login from 'pages/Login';
 import SignUp from 'pages/SignUp';
 import React, { useContext } from 'react';
-import { Outlet, Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import 'style/App.scss';
+import { UtilsContext } from './contexts/utilsProvider';
 
 export default function App() {
   const { currentUser } = useContext(authContext);
-  const { appRoutes } = useContext(authContext);
+  const { appRoutes } = useContext(UtilsContext);
 
   return (
     <div className='app'>
       <Navbar />
       <div className='content'>
-        <div id='spinner'>
-          <FontAwesomeIcon icon={faCircleNotch} spin size='xl' style={{ color: '#000000' }} />
-        </div>
         <Routes>
           {/* Public routes */}
           <Route path={`${appRoutes.HOME}`} element={<Map />} />
 
           {/* Routes accessible only when the user IS NOT logged in */}
-          <Route element={<OnlyUnauthRoutes redirectTo='/' />}>
+          <Route element={<OnlyUnauthRoutes redirectTo={`${appRoutes.HOME}`} />}>
             <Route path={`${appRoutes.LOGIN}`} element={<Login />} />
             <Route path={`${appRoutes.SIGNUP}`} element={<SignUp />} />
           </Route>

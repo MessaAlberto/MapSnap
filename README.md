@@ -1,7 +1,57 @@
 # MapSnap
 Explore the World through the Eyes of the Community.
 
-prova 2
+task:
+- [x] manage refresh token
+- [x] manage logout
+- [x] browser ddeve creare una sola socket, per client su Map.
+- [x] customizzare openlayers con css e funzioni per hover(popUp)
+- [x] inviare foto
+
+
+express ingrandisce l'area di ricerca del client view di 25 volte, per evitare di caricare nuovamente le immagini. 
+
+cache delle foto su express per evitare di richiderle ad s3
+
+
+
+
+DB mqtt
+```sql
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(64) NOT NULL,
+    refresh_token TEXT NOT NULL
+);
+```
+
+DB Images
+```sql
+-- Creazione della tabella 'images'
+CREATE TABLE images (
+    id_ima SERIAL PRIMARY KEY,     -- Identificativo univoco per ogni immagine
+    latitude DECIMAL(9, 6) NOT NULL,   -- Latitudine con precisione fino a 6 decimali
+    longitude DECIMAL(9, 6) NOT NULL  -- Longitudine con precisione fino a 6 decimali
+);
+
+-- Creazione della tabella 'topics'
+CREATE TABLE topics (
+    id_top SERIAL PRIMARY KEY,     -- Identificativo univoco per ogni topic
+    name VARCHAR(255) NOT NULL UNIQUE -- Nome del topic (unico per evitare duplicati)
+);
+
+-- Creazione della tabella di relazione 'image_topic'
+CREATE TABLE image_topic (
+    idr_ima INT NOT NULL,          -- Riferimento all'identificativo dell'immagine
+    idr_top INT NOT NULL,          -- Riferimento all'identificativo del topic
+    PRIMARY KEY (idr_ima, idr_top), -- Chiave primaria composta
+    FOREIGN KEY (idr_ima) REFERENCES images (id_ima) ON DELETE CASCADE, -- Chiave esterna con azione di cascata
+    FOREIGN KEY (idr_top) REFERENCES topics (id_top) ON DELETE CASCADE  -- Chiave esterna con azione di cascata
+);
+```
+
 
 
 serve/package.json

@@ -1,9 +1,9 @@
-import { authContext } from 'contexts/auth';
+import { UtilsContext } from 'contexts/utilsProvider';
 import React from 'react';
 import { Link } from 'react-router-dom';
 
 export default function MapSnapMenuItem() {
-  const { appRoutes } = React.useContext(authContext);
+  const { appRoutes } = React.useContext(UtilsContext);
   return (
     <li className="home-item">
       <Link id='map-snap' to={appRoutes.HOME}>
