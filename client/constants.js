@@ -11,6 +11,7 @@ export const APP_ROUTES = {
   HOME: '/',
   LOGIN: '/login',
   SIGNUP: '/signup',
+  UPLOAD_PHOTO: '/upload-photo',
   MAP_SNAP: '/map-snap',
 };
 

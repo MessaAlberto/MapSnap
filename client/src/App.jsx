@@ -1,16 +1,34 @@
-import Map from 'components/Map';
+import Map from 'components/Map/Map';
 import Navbar from 'components/Navbar/Navbar';
 import { authContext } from 'contexts/auth';
 import Login from 'pages/Login';
+import NotFound from 'pages/NotFound';
 import SignUp from 'pages/SignUp';
+import UploadPhoto from 'pages/UploadPhoto';
 import React, { useContext } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import 'style/App.scss';
 import { UtilsContext } from './contexts/utilsProvider';
 
-export default function App() {
+const App = () => {
   const { currentUser } = useContext(authContext);
   const { appRoutes } = useContext(UtilsContext);
+
+  const AuthRoutes = ({ redirectTo }) => {
+    // Redirect to login page if user is not authenticated
+    if (!currentUser) {
+      return <Navigate to={redirectTo + '?mustBeAuthenticated=true'} />;
+    }
+    return <Outlet />;
+  }
+
+  const OnlyUnauthRoutes = ({ redirectTo }) => {
+    // Redirect to home page if user is already authenticated
+    if (currentUser) {
+      return <Navigate to={redirectTo} />;
+    }
+    return <Outlet />;
+  }
 
   return (
     <div className='app'>
@@ -29,8 +47,7 @@ export default function App() {
           {/* Routes accessible only when the user IS logged in */}
           <Route element={<AuthRoutes redirectTo={`${appRoutes.LOGIN}`} />}>
             {/* Add your authenticated routes here */}
-            <Route path='/protected-route-1' element={<ProtectedRoute1 />} />
-            <Route path='/protected-route-2' element={<ProtectedRoute2 />} />
+            <Route path={`${appRoutes.UPLOAD_PHOTO}`} element={<UploadPhoto />} />
           </Route>
 
           {/* Catch-all route for 404 */}
@@ -41,37 +58,4 @@ export default function App() {
   );
 }
 
-function AuthRoutes({ redirectTo }) {
-  const { currentUser } = useContext(authContext);
-
-  // Redirect to login page if user is not authenticated
-  if (!currentUser) {
-    return <Navigate to={redirectTo} />;
-  }
-
-  return <Outlet />;
-}
-
-function OnlyUnauthRoutes({ redirectTo }) {
-  const { currentUser } = useContext(authContext);
-
-  // Redirect to home page if user is already authenticated
-  if (currentUser) {
-    return <Navigate to={redirectTo} />;
-  }
-
-  return <Outlet />;
-}
-
-// Example components for authenticated routes
-function ProtectedRoute1() {
-  return <h2>Protected Route 1</h2>;
-}
-
-function ProtectedRoute2() {
-  return <h2>Protected Route 2</h2>;
-}
-
-function NotFound() {
-  return <h2>404 Not Found</h2>;
-}
+export default App;

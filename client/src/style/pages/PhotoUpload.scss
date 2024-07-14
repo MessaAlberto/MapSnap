@@ -1,0 +1,104 @@
+.photo-upload-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  .photo-upload-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .dropzone {
+    border: 0.125rem dashed #cccccc;
+    border-radius: 0.25rem;
+    padding: 1.25rem;
+    text-align: center;
+    cursor: pointer;
+    transition: border 0.24s ease-in-out;
+    width: 18.75rem;
+    height: 12.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.25rem;
+
+    &.active {
+      border-color: #666666;
+    }
+  }
+
+  .preview-container {
+    position: relative;
+    margin-top: 1.25rem;
+    text-align: center;
+
+    h3 {
+      margin-bottom: 0.625rem;
+    }
+
+    .remove-photo {
+      position: absolute;
+      top: 1.375rem;
+      right: -0.8rem;
+      background: red;
+      color: white;
+      border-radius: 50%;
+      width: 1.875rem;
+      height: 1.875rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s;
+    
+      &:hover {
+        background: darkred;
+      }
+    }
+    
+
+    img {
+      width: 12.5rem;
+      height: 12.5rem;
+      object-fit: cover;
+      border-radius: 0.25rem;
+    }
+  }
+
+  .input-group {
+    margin-bottom: 0.9375rem;
+
+    label {
+      display: block;
+      margin-bottom: 0.3125rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 0.625rem;
+      border: 1px solid #cccccc;
+      border-radius: 0.25rem;
+    }
+  }
+
+  button {
+    padding: 0.625rem 0.9375rem;
+    border: none;
+    border-radius: 0.25rem;
+    background-color: #007bff;
+    color: white;
+    cursor: pointer;
+
+    &:hover {
+      background-color: #0056b3;
+    }
+  }
+
+  .error {
+    color: red;
+    margin-top: 0.625rem;
+    font-size: 0.875rem;
+  }
+}

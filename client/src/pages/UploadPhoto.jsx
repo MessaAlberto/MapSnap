@@ -1,27 +1,67 @@
+import PhotoUpload from 'components/DragAndDrop'; // Import the drag-and-drop component
 import React, { useState } from 'react';
+import 'style/pages/PhotoUpload.scss';
 
-const PhotoUploadComponent = () => {
+const PhotoUploadPage = () => {
   const [photo, setPhoto] = useState(null);
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [hashtag, setHashtag] = useState('');
 
-  const handleFileChange = (e) => {
-    setPhoto(e.target.files[0]);
+  const handlePhotoChange = (file) => {
+    setPhoto(file);
+  };
+
+  const handleRemovePhoto = () => {
+    setPhoto(null); // Reset the photo state
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Handle photo submission logic here
+    setHasSubmitted(true);
     console.log('Photo submitted:', photo);
+    console.log('Hashtag:', hashtag);
+    // Handle submission logic here (e.g., upload to server)
   };
 
   return (
-    <div className="photo-upload-container">
-      <h2>Upload Your Photo</h2>
+    <div className="photo-upload-page">
+      <h1>Upload Your Photo</h1>
       <form onSubmit={handleSubmit}>
-        <input type="file" onChange={handleFileChange} accept="image/*" required />
+        {/* Photo Upload Component */}
+        {photo ? (
+          <div className="preview-container">
+            <h3>Preview:</h3>
+            <button className="remove-photo" onClick={handleRemovePhoto} type="button">
+              X
+            </button>
+            <img src={URL.createObjectURL(photo)} alt="Preview" />
+          </div>
+        ) : (
+          <PhotoUpload onPhotoChange={handlePhotoChange} />
+        )}
+
+        {/* Hashtag Input */}
+        <div className="input-group">
+          <label htmlFor="hashtag">Add a Hashtag:</label>
+          <input
+            type="text"
+            id="hashtag"
+            value={hashtag}
+            onChange={(e) => setHashtag(e.target.value)}
+            required
+          />
+        </div>
+
+        {/* Other Inputs */}
+        <div className="input-group">
+          <label htmlFor="additional-input">Additional Input:</label>
+          <input type="text" id="additional-input" />
+        </div>
+
         <button type="submit">Submit</button>
       </form>
     </div>
   );
 };
 
-export default PhotoUploadComponent;
+export default PhotoUploadPage;

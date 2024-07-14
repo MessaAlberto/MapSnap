@@ -7,6 +7,7 @@ task:
 - [x] browser ddeve creare una sola socket, per client su Map.
 - [x] customizzare openlayers con css e funzioni per hover(popUp)
 - [x] inviare foto
+- [x] per prelevare proprie foto, user invia richiesta con proprio id(localStorage), server fa richiesta tramite mqtt con foto con userId
 
 
 express ingrandisce l'area di ricerca del client view di 25 volte, per evitare di caricare nuovamente le immagini. 

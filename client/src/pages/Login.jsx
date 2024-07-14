@@ -16,12 +16,19 @@ const Login = () => {
   const location = useLocation();
   const query = new URLSearchParams(location.search);
   const success = query.get('success');
+  const mustBeAuthenticated = query.get('mustBeAuthenticated');
 
   useEffect(() => {
     if (success) {
       setError('Account created successfully. Please login.');
     }
   }, [success]);
+
+  useEffect(() => {
+    if (mustBeAuthenticated) {
+      setError('You must be logged in to access that or to make that action.');
+    }
+  }, [mustBeAuthenticated]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
