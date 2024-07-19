@@ -12,6 +12,7 @@ export default defineConfig({
       contexts: path.resolve(__dirname, './src/contexts'),
       style: path.resolve(__dirname, './src/style'),
       socketManager: path.resolve(__dirname, './socketManager.js'),
+      constants: path.resolve(__dirname, './constants.js'),
     },
   },
   plugins: [react()],

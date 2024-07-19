@@ -5,17 +5,33 @@ const { v4: uuidv4 } = require('uuid');
 
 let mqttClient;
 let socketClientMap = {};
+let uploadStatusMap = new Map();
 
 function setupMQTTConnection(io) {
   mqttClient = mqtt.connect(`ws://${process.env.MQTT_BROKER_IP}:${process.env.MQTT_BROKER_PORT}`);
 
   mqttClient.on('connect', () => {
     console.log('Connected to MQTT broker');
+    mqttClient.subscribe('uploadConfirm');
     setupSocketIO(io);
   });
 
   mqttClient.on('message', async (topic, message) => {
     console.log(`MQTT message received on topic: ${topic}`);
+
+    if (topic === 'uploadConfirm') {
+      const { requestId, status, imageId } = JSON.parse(message.toString());
+      if (uploadStatusMap.has(requestId)) {
+        const { resolve, reject } = uploadStatusMap.get(requestId);
+        if (status === 'good') {
+          resolve({ status: 'Upload successful', imageId });
+        } else {
+          reject('Upload failed');
+        }
+        uploadStatusMap.delete(requestId);
+      }
+    }
+
 
     let topicParts = topic.split('/');
     let socketId = topicParts[0];
@@ -89,11 +105,18 @@ function setupSocketIO(io) {
       const parsedData = JSON.parse(data.message);
       const bottomLeft = [parsedData.bottomLeft.lon, parsedData.bottomLeft.lat];
       const topRight = [parsedData.topRight.lon, parsedData.topRight.lat];
+      const topic = parsedData.topic;
 
       console.log('Received search request on topic:', parsedData.topic);
 
       const requestId = uuidv4();
-      socketClientMap[socket.id].lastRequestId = requestId;
+      const lastTopic = socketClientMap[socket.id].lastTopic;
+
+      // Check if the topic is the same as the last one
+      if (lastTopic !== topic) {
+        socketClientMap[socket.id].lastRequestId = requestId;
+        socketClientMap[socket.id].lastTopic = topic;
+      }
 
       // Expand the search area
       const expandedCoordinates = expandCoordinates(bottomLeft, topRight);
@@ -140,7 +163,31 @@ function expandCoordinates(bottomLeft, topRight) {
   };
 }
 
+function uploadPhotoMQTT(payload) {
+  return new Promise((resolve, reject) => {
+    const id = uuidv4();
+    payload.requestId = id;
+    uploadStatusMap.set(id, { resolve, reject });
+
+    mqttClient.publish('uploadPhoto', JSON.stringify(payload), (err) => {
+      if (err) {
+        uploadStatusMap.delete(id);
+        return reject('Error publishing to MQTT');
+      }
+
+      // Set a timeout to handle cases where the confirmation is not received
+      setTimeout(() => {
+        if (uploadStatusMap.has(id)) {
+          uploadStatusMap.delete(id);
+          reject('Upload confirmation not received in time');
+        }
+      }, 10000); // Timeout after 10 seconds
+    });
+  });
+}
+
 
 module.exports = {
+  uploadPhotoMQTT,
   setupMQTTConnection
 };

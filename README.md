@@ -6,7 +6,7 @@ task:
 - [x] manage logout
 - [x] browser ddeve creare una sola socket, per client su Map.
 - [x] customizzare openlayers con css e funzioni per hover(popUp)
-- [x] inviare foto
+- [x] recuperare tutte info da ricerca foto (owner da fare, topic fatto)
 - [x] per prelevare proprie foto, user invia richiesta con proprio id(localStorage), server fa richiesta tramite mqtt con foto con userId
 
 
@@ -34,7 +34,8 @@ DB Images
 CREATE TABLE images (
     id_ima SERIAL PRIMARY KEY,     -- Identificativo univoco per ogni immagine
     latitude DECIMAL(9, 6) NOT NULL,   -- Latitudine con precisione fino a 6 decimali
-    longitude DECIMAL(9, 6) NOT NULL  -- Longitudine con precisione fino a 6 decimali
+    longitude DECIMAL(9, 6) NOT NULL,  -- Longitudine con precisione fino a 6 decimali
+    owner_id INT NOT NULL,          -- Identificativo dell'utente proprietario dell
 );
 
 -- Creazione della tabella 'topics'

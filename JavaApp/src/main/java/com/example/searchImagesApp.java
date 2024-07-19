@@ -33,6 +33,7 @@ public class searchImagesApp {
         try {
             connectToMQTTBroker();
             listenToNewUsers();
+            listenToUploads();
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -174,22 +175,22 @@ public class searchImagesApp {
                     String imageIdStr = resultSet.getString("id_ima");
                     double latitude = resultSet.getDouble("latitude");
                     double longitude = resultSet.getDouble("longitude");
-                
+
                     String queryTopic = "SELECT t.name " +
-                                        "FROM topics t " +
-                                        "JOIN image_topic it ON t.id_top = it.idr_top " +
-                                        "WHERE it.idr_ima = ?";
-                
+                            "FROM topics t " +
+                            "JOIN image_topic it ON t.id_top = it.idr_top " +
+                            "WHERE it.idr_ima = ?";
+
                     try (PreparedStatement pstmtTopic = dbConnection.prepareStatement(queryTopic)) {
                         pstmtTopic.setInt(1, imageId);
                         ResultSet resultSetTopic = pstmtTopic.executeQuery();
-                
+
                         JSONArray topicsArray = new JSONArray();
                         while (resultSetTopic.next()) {
                             String topic = resultSetTopic.getString("name");
                             topicsArray.put(topic);
                         }
-                
+
                         JSONObject imageObject = new JSONObject();
                         imageObject.put("id", imageIdStr);
                         imageObject.put("lat", latitude);
@@ -222,6 +223,115 @@ public class searchImagesApp {
         }
     }
 
+    protected void listenToUploads() {
+        try {
+            mqttClient.subscribe("uploadPhoto", (topic, message) -> {
+                String jsonMessage = new String(message.getPayload());
+                try {
+                    JSONObject jsonObject = new JSONObject(jsonMessage);
+                    System.out.println("Received upload request: " + jsonObject);
+                    String requestId = jsonObject.getString("requestId");
+                    JSONArray hashtags = jsonObject.getJSONArray("hashtags");
+                    double latitude = jsonObject.optDouble("latitude", Double.NaN);
+                    double longitude = jsonObject.optDouble("longitude", Double.NaN);
+                    int ownerId = jsonObject.optInt("ownerId", -1);
+
+                    UploadResult uploadResult = handleUpload(hashtags, ownerId, latitude, longitude);
+
+                    JSONObject response = new JSONObject();
+                    response.put("requestId", requestId);
+                    response.put("status", uploadResult.success ? "good" : "bad");
+                    if (uploadResult.success) {
+                        response.put("imageId", uploadResult.imageId);
+                    }
+
+                    mqttClient.publish("uploadConfirm", new MqttMessage(response.toString().getBytes()));
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            });
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private UploadResult handleUpload(JSONArray hashtags, int ownerId, double latitude, double longitude) {
+        if (ownerId < 0) {
+            System.err.println("Invalid ownerId: " + ownerId);
+            return new UploadResult(false, -1);
+        }
+
+        try {
+            int imageId = savePhoto(ownerId, latitude, longitude);
+            System.out.println("Saved image with ID: " + imageId);
+
+            // Salva gli hashtag
+            saveHashtags(hashtags, imageId);
+
+            return new UploadResult(true, imageId);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new UploadResult(false, -1); 
+        }
+    }
+
+    private int savePhoto(int ownerId, double latitude, double longitude) throws SQLException {
+        String sql = "INSERT INTO images (owner_id, latitude, longitude) VALUES (?, ?, ?) RETURNING id_ima";
+        try (PreparedStatement pstmt = dbConnection.prepareStatement(sql)) {
+            pstmt.setInt(1, ownerId);
+            pstmt.setDouble(2, latitude);
+            pstmt.setDouble(3, longitude);
+
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("id_ima");
+            } else {
+                throw new SQLException("Failed to retrieve generated ID");
+            }
+        }
+    }
+
+    private void saveHashtags(JSONArray hashtags, int imageId) throws SQLException {
+        String sqlInsertTopic = "INSERT INTO topics (name) VALUES (?) ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name RETURNING id_top";
+        String sqlInsertImageTopic = "INSERT INTO image_topic (idr_ima, idr_top) VALUES (?, ?)";
+
+        try (PreparedStatement pstmtInsertTopic = dbConnection.prepareStatement(sqlInsertTopic);
+                PreparedStatement pstmtInsertImageTopic = dbConnection.prepareStatement(sqlInsertImageTopic)) {
+
+            for (int i = 0; i < hashtags.length(); i++) {
+                String hashtag = hashtags.getString(i);
+
+                pstmtInsertTopic.setString(1, hashtag);
+                try (ResultSet rs = pstmtInsertTopic.executeQuery()) {
+                    if (rs.next()) {
+                        int topicId = rs.getInt("id_top");
+
+                        pstmtInsertImageTopic.setInt(1, imageId);
+                        pstmtInsertImageTopic.setInt(2, topicId);
+                        pstmtInsertImageTopic.executeUpdate();
+                    } else {
+                        throw new SQLException("Failed to retrieve topic ID");
+                    }
+                }
+            }
+        }
+    }
+
+
+    private static class UploadResult {
+        boolean success;
+        int imageId;
+    
+        UploadResult(boolean success, int imageId) {
+            this.success = success;
+            this.imageId = imageId;
+        }
+    }
+
+    
     public static void main(String[] args) throws IOException {
         new searchImagesApp();
     }

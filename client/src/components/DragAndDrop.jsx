@@ -2,7 +2,7 @@ import React, { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 
 const PhotoUpload = ({ onPhotoChange }) => {
-  const onDrop = useCallback(async (acceptedFiles, rejectedFiles) => {
+  const onDrop = useCallback(async (acceptedFiles) => {
     if (acceptedFiles.length) {
       const resizedImage = await resizeFile(acceptedFiles[0]);
       onPhotoChange(resizedImage);
@@ -20,29 +20,25 @@ const PhotoUpload = ({ onPhotoChange }) => {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
 
-          // Set canvas dimensions to square size
           canvas.width = size;
           canvas.height = size;
 
-          // Calculate center crop
           const offsetX = (img.width - size) / 2;
           const offsetY = (img.height - size) / 2;
 
-          // Draw the cropped image
           ctx.drawImage(img, offsetX, offsetY, size, size, 0, 0, size, size);
 
           const maxFileSize = 1 * 1024 * 1024; // 1MB
           let quality = 0.9;
           let blob = await compressImage(canvas, quality);
 
-          // Reduce quality until blob size is under 1MB
           while (blob.size > maxFileSize && quality > 0.1) {
             quality -= 0.1;
             blob = await compressImage(canvas, quality);
           }
 
-          console.log('Final Blob Size:', blob.size);
-          resolve(blob);
+          const jpgFile = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg', lastModified: Date.now() });
+          resolve(jpgFile);
         };
       };
       reader.readAsDataURL(file);
@@ -57,8 +53,6 @@ const PhotoUpload = ({ onPhotoChange }) => {
     });
   };
 
-
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
@@ -72,6 +66,13 @@ const PhotoUpload = ({ onPhotoChange }) => {
   return (
     <div {...getRootProps()} className={`dropzone ${isDragActive ? 'active' : ''}`}>
       <input {...getInputProps()} />
+      <input
+        type="file"
+        accept="image/*"
+        capture="camera"
+        onChange={(e) => onDrop(e.target.files)}
+        style={{ display: 'none' }}
+      />
       {isDragActive ? (
         <p>Drop the files here ...</p>
       ) : (

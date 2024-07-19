@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { UtilsContext } from '../contexts/utilsProvider';
 import FormField from './FormField';
 
 const AuthForm = ({
@@ -13,6 +14,7 @@ const AuthForm = ({
   actionLinkText,
   actionOnClick,
 }) => {
+  const { appRoutes } = React.useContext(UtilsContext);
   const navigate = useNavigate();
 
   const handleActionClick = (e) => {
@@ -57,6 +59,12 @@ const AuthForm = ({
         )}
         .
       </p>
+
+      <div className='auth-form-footer'>
+        <Link to={appRoutes.HOME} className='home-button'>
+          Return to Home
+        </Link>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-const { S3Client, ListBucketsCommand, ListObjectsV2Command, GetObjectCommand } = require('@aws-sdk/client-s3');
+const { S3Client, ListBucketsCommand, ListObjectsV2Command, GetObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
 const { fromIni } = require('@aws-sdk/credential-provider-ini');
 
 // Configurazione client S3
@@ -64,4 +64,28 @@ async function convertImageToBase64(stream) {
   });
 }
 
-module.exports = { testS3Connection, getFoldersContentsFromS3 };
+// Function to upload photo to S3
+async function uploadPhotoToS3(photoBase64, id) {
+  const bucketName = 'mqtt-images-storage';
+  const key = `${id}/ima.jpg`;
+  const buffer = Buffer.from(photoBase64, 'base64');
+
+  try {
+    const params = {
+      Bucket: bucketName,
+      Key: key,
+      Body: buffer,
+      ContentEncoding: 'base64',
+      ContentType: 'image/jpeg'
+    };
+
+    await s3Client.send(new PutObjectCommand(params));
+    console.log(`Uploaded photo to S3 with key: ${key}`);
+    return true;
+  } catch (error) {
+    console.error('Error uploading photo to S3:', error);
+    return false;
+  }
+}
+
+module.exports = { testS3Connection, getFoldersContentsFromS3, uploadPhotoToS3 };

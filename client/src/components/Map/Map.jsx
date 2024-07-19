@@ -52,6 +52,7 @@ const MapComponent = () => {
     searchTopicRef.current = searchTopic;
 
     const debouncedSendSearchRequest = debounce(() => {
+      setIsSearching(true);
       if (isSearchRef.current) return;
       sendSearchRequest(mapRef.current, searchTopicRef.current);
     }, 300);
@@ -65,6 +66,7 @@ const MapComponent = () => {
   }, []);
 
   useEffect(() => {
+    setIsSearching(true);
     searchTopicRef.current = searchTopic;
     clearMapImages(mapRef.current);
     sendSearchRequest(mapRef.current, searchTopic);
@@ -88,7 +90,7 @@ const MapComponent = () => {
 
   return (
     <div className="map-container">
-      <div className="topic-researched">Result for: #{searchTopic}</div>
+      {searchTopic && <div className="topic-researched">Result for: #{searchTopic}</div>}
       <div id="map" ref={mapDivRef} className="map"></div>
       <div id='spinner' className={`spinner ${isSearching ? 'visible' : 'hidden'}`}>
         <FontAwesomeIcon icon={faCircleNotch} spin size='xl' style={{ color: '#000000' }} />
