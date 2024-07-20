@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const db = require('../database');
+const { getUserById } = require('../database');
 const ms = require('ms');
 
 const secretToken = process.env.JWT_SECRET_TOKEN;
@@ -18,12 +18,7 @@ const authenticateToken = async (req, res, next) => {
   const verifyRefreshTokenAndUpdateAccessToken = async () => {
     try {
       const decodedRefreshToken = jwt.verify(refreshToken, secretRefresh);
-      const query = {
-        text: 'SELECT * FROM users WHERE id = $1',
-        values: [decodedRefreshToken._id],
-      };
-
-      const user = await db.oneOrNone(query);
+      const user = await getUserById(decodedRefreshToken._id);
 
       if (!user || user.refresh_token !== refreshToken) {
         return res.status(403).send('Invalid refresh token');

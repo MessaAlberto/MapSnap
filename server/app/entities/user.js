@@ -1,5 +1,5 @@
 const router = require('express').Router();
-const db = require('../../database');
+const { getUserByUsername } = require('../../database');
 
 
 
@@ -7,12 +7,7 @@ router.get('/username/:username', async (req, res) => {
   const { username } = req.params;
 
   try {
-    const query = {
-      text: 'SELECT * FROM users WHERE username = $1',
-      values: [username],
-    };
-
-    const result = await db.query(query);
+    const result = await getUserByUsername(username);
 
     if (result && result.length > 0) {
       res.status(200).send('Username exists');

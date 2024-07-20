@@ -34,6 +34,7 @@ public class searchImagesApp {
             connectToMQTTBroker();
             listenToNewUsers();
             listenToUploads();
+            listenToDeleteImages();
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -141,17 +142,9 @@ public class searchImagesApp {
             double topRightLat = topRightObject.getDouble("lat");
 
             String topicInput = jsonMessage.getString("topic");
-            String requestId = jsonMessage.getString("requestId");
-
-            // stampa valori
-            System.out.println("bottomLeftLat: " + bottomLeftLat);
-            System.out.println("bottomLeftLong: " + bottomLeftLong);
-            System.out.println("topRightLat: " + topRightLat);
-            System.out.println("topRightLong: " + topRightLong);
-            System.out.println("topicInput: " + topicInput);
 
             // Modifica la query per includere i topic e le coordinate
-            String query = "SELECT i.id_ima, i.latitude, i.longitude " +
+            String query = "SELECT i.id_ima, i.latitude, i.longitude, i.owner_id " +
                     "FROM images i " +
                     "JOIN image_topic it ON i.id_ima = it.idr_ima " +
                     "JOIN topics t ON it.idr_top = t.id_top " +
@@ -175,6 +168,7 @@ public class searchImagesApp {
                     String imageIdStr = resultSet.getString("id_ima");
                     double latitude = resultSet.getDouble("latitude");
                     double longitude = resultSet.getDouble("longitude");
+                    int ownerId = resultSet.getInt("owner_id");
 
                     String queryTopic = "SELECT t.name " +
                             "FROM topics t " +
@@ -192,9 +186,10 @@ public class searchImagesApp {
                         }
 
                         JSONObject imageObject = new JSONObject();
-                        imageObject.put("id", imageIdStr);
+                        imageObject.put("imageId", imageIdStr);
                         imageObject.put("lat", latitude);
                         imageObject.put("lon", longitude);
+                        imageObject.put("ownerId", ownerId);
                         imageObject.put("topics", topicsArray);
                         imagesArray.put(imageObject);
                     } catch (SQLException e) {
@@ -202,23 +197,12 @@ public class searchImagesApp {
                     }
                 }
 
-                publishToUserTopic(userId, requestId, imagesArray.toString());
-                System.out.println("Finished finding images for user " + userId);
+                JSONObject response = new JSONObject();
+                response.put("imageDataList", new JSONArray(imagesArray));
+
+                mqttClient.publish(userId + "/image_data", new MqttMessage(response.toString().getBytes()));
             }
-        } catch (SQLException | JSONException e) {
-            e.printStackTrace();
-        }
-    }
-
-    protected void publishToUserTopic(String userId, String requestId, String imagesData) {
-        try {
-            JSONObject response = new JSONObject();
-            response.put("requestId", requestId);
-            response.put("imageDataList", new JSONArray(imagesData));
-
-            mqttClient.publish(userId + "/image_data", new MqttMessage(response.toString().getBytes()));
-            System.out.println("Published image data to user " + userId);
-        } catch (MqttException e) {
+        } catch (SQLException | JSONException | MqttException e) {
             e.printStackTrace();
         }
     }
@@ -256,6 +240,7 @@ public class searchImagesApp {
         } catch (MqttException e) {
             e.printStackTrace();
         }
+        System.out.println("Upload listener started");
     }
 
     private UploadResult handleUpload(JSONArray hashtags, int ownerId, double latitude, double longitude) {
@@ -266,15 +251,12 @@ public class searchImagesApp {
 
         try {
             int imageId = savePhoto(ownerId, latitude, longitude);
-            System.out.println("Saved image with ID: " + imageId);
-
-            // Salva gli hashtag
             saveHashtags(hashtags, imageId);
 
             return new UploadResult(true, imageId);
         } catch (Exception e) {
             e.printStackTrace();
-            return new UploadResult(false, -1); 
+            return new UploadResult(false, -1);
         }
     }
 
@@ -320,18 +302,66 @@ public class searchImagesApp {
         }
     }
 
-
     private static class UploadResult {
         boolean success;
         int imageId;
-    
+
         UploadResult(boolean success, int imageId) {
             this.success = success;
             this.imageId = imageId;
         }
     }
 
-    
+    protected void listenToDeleteImages() {
+        try {
+            mqttClient.subscribe("deletePhoto", (topic, message) -> {
+                String jsonMessage = new String(message.getPayload());
+                JSONObject jsonObject = new JSONObject(jsonMessage);
+                System.out.println("Received delete request: " + jsonObject);
+                int imageId = jsonObject.getInt("imageId");
+                String requestId = jsonObject.getString("requestId");
+                JSONObject response = new JSONObject();
+
+                try {
+                    String sqlDeleteImage = "DELETE FROM images WHERE id_ima = ? RETURNING id_ima";
+                    try (PreparedStatement pstmtDeleteImage = dbConnection.prepareStatement(sqlDeleteImage)) {
+                        pstmtDeleteImage.setInt(1, imageId);
+                        ResultSet rs = pstmtDeleteImage.executeQuery();
+
+                        if (rs.next()) {
+                            // Successfully deleted
+                            response.put("status", "success");
+                            response.put("message", "Image deleted successfully");
+                        } else {
+                            // No rows affected
+                            response.put("status", "not_found");
+                            response.put("message", "Image not found");
+                        }
+                    } catch (SQLException e) {
+                        // Error during SQL operation
+                        e.printStackTrace();
+                        response.put("status", "error");
+                        response.put("message", "Error deleting image from database");
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                    response.put("status", "error");
+                    response.put("message", "Error processing JSON message");
+                }
+
+                try {
+                    response.put("requestId", requestId);
+                    mqttClient.publish("deleteConfirm", new MqttMessage(response.toString().getBytes()));
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            });
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Delete listener started");
+    }
+
     public static void main(String[] args) throws IOException {
         new searchImagesApp();
     }

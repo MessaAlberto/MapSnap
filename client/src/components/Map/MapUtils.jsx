@@ -32,10 +32,3 @@ export const geocodeAndCenterMap = async (place, map) => {
     console.error('Error geocoding:', error);
   }
 };
-
-export const clearMapImages = (map) => {
-  if (map) {
-    console.log('Clearing map images');
-    map.getOverlays().clear();
-  }
-};

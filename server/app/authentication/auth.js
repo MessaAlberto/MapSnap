@@ -13,12 +13,7 @@ router.post('/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const query = {
-      text: 'SELECT * FROM users WHERE username = $1',
-      values: [username],
-    };
-
-    const user = await db.oneOrNone(query);
+    const user = await db.getUserByUsername(username);
 
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).send('Invalid credentials');
@@ -27,7 +22,7 @@ router.post('/login', async (req, res) => {
     const accessToken = jwt.sign({ _id: user.id }, secretToken, { expiresIn: expireToken });
     const refreshToken = jwt.sign({ _id: user.id }, secretRefresh, { expiresIn: expireRefresh });
 
-    await db.none('UPDATE users SET refresh_token = $1 WHERE id = $2', [refreshToken, user.id]);
+    await db.updateRefreshToken(user.id, refreshToken);
 
     res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: ms(expireToken) });
     res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: ms(expireRefresh) });
@@ -59,24 +54,14 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    const checkquery = {
-      text: 'SELECT * FROM users WHERE email = $1',
-      values: [email],
-    };
-
-    const existingUser = await db.oneOrNone(checkquery);
+    const existingUser = await db.getUserByEmail(email);
 
     if (existingUser) {
       return res.status(422).send('Email is not valid or already taken');
     }
 
     const hashPassword = await bcrypt.hash(password, saltRounds);
-    const query = {
-      text: 'INSERT INTO users(username, email, password) VALUES($1, $2, $3)',
-      values: [username, email, hashPassword],
-    };
-
-    await db.none(query);
+    await db.registerUser(username, email, hashPassword);
 
     res.status(201).send('User created');
   } catch (err) {

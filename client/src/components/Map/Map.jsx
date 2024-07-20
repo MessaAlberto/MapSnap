@@ -11,8 +11,8 @@ import { OSM } from 'ol/source';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { disconnectSocket, setupSocketConnection } from 'socketManager';
-import { clearMapImages, geocodeAndCenterMap, sendSearchRequest } from './MapUtils';
-import { addMarker } from './Marker';
+import { geocodeAndCenterMap, sendSearchRequest } from './MapUtils';
+import { addMarker, clearMapImages } from './Marker';
 
 import 'style/components/Map.scss';
 
@@ -20,7 +20,6 @@ const MapComponent = () => {
   const mapDivRef = useRef(null);
   const mapRef = useRef(null);
   const searchTopicRef = useRef('');
-  const isSearchRef = useRef(false);
   const [isSearching, setIsSearching] = useState(false);
   const { searchTopic, searchPlace, appRoutes } = useContext(UtilsContext);
   const navigate = useNavigate();
@@ -52,8 +51,11 @@ const MapComponent = () => {
     searchTopicRef.current = searchTopic;
 
     const debouncedSendSearchRequest = debounce(() => {
+      if (searchTopicRef.current === '') {
+        setIsSearching(false);
+        return;
+      }
       setIsSearching(true);
-      if (isSearchRef.current) return;
       sendSearchRequest(mapRef.current, searchTopicRef.current);
     }, 300);
 
@@ -66,8 +68,12 @@ const MapComponent = () => {
   }, []);
 
   useEffect(() => {
-    setIsSearching(true);
     searchTopicRef.current = searchTopic;
+    if (searchTopicRef.current === '') {
+      setIsSearching(false);
+      return;
+    }
+    setIsSearching(true);
     clearMapImages(mapRef.current);
     sendSearchRequest(mapRef.current, searchTopic);
   }, [searchTopic]);
@@ -82,8 +88,8 @@ const MapComponent = () => {
     setIsSearching(false);
     if (Array.isArray(data)) {
       data.forEach(item => {
-        const { id, lat, lon, topics, imageBase64 } = item;
-        addMarker(mapRef.current, lon, lat, topics, imageBase64);
+        const { imageId, lat, lon, owner_username, topics, imageBase64 } = item;
+        addMarker(mapRef.current, imageId, lon, lat, owner_username, topics, imageBase64);
       });
     }
   };

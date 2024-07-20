@@ -2,12 +2,16 @@
 Explore the World through the Eyes of the Community.
 
 task:
-- [x] manage refresh token
-- [x] manage logout
 - [x] browser ddeve creare una sola socket, per client su Map.
-- [x] customizzare openlayers con css e funzioni per hover(popUp)
+- [x] controllare validità dati nei server e javaApp
+- [x] change everywhere photo in image or viceversa
+
+
 - [x] recuperare tutte info da ricerca foto (owner da fare, topic fatto)
-- [x] per prelevare proprie foto, user invia richiesta con proprio id(localStorage), server fa richiesta tramite mqtt con foto con userId
+- [x] customizzare openlayers con css e funzioni per hover(popUp)
+- [x] mobile css
+- [x] pagina my pics
+- [x] deployare app
 
 
 express ingrandisce l'area di ricerca del client view di 25 volte, per evitare di caricare nuovamente le immagini. 
@@ -53,6 +57,140 @@ CREATE TABLE image_topic (
     FOREIGN KEY (idr_top) REFERENCES topics (id_top) ON DELETE CASCADE  -- Chiave esterna con azione di cascata
 );
 ```
+
+
+
+esempi concreti:
+```javascript
+socketClientMap = {
+  "socket123": {
+    images: {
+      "image1": {
+        imageBase64: "base64data1",
+        owner_id: 1,
+        username: "user1"
+      },
+      "image2": {
+        imageBase64: "base64data2",
+        owner_id: 2,
+        username: "user2"
+      }
+    },
+    lastRequestId: "request123",
+    lastTopic: "nature"
+  },
+  "socket456": {
+    images: {
+      "image3": {
+        imageBase64: "base64data3",
+        owner_id: 3,
+        username: "user3"
+      }
+    },
+    lastRequestId: "request456",
+    lastTopic: "city"
+  }
+}
+
+
+cachedImages = {
+  "image1": {
+    imageBase64: "base64data1",
+    owner_id: 1,
+    username: "user1"
+  },
+  "image2": {
+    imageBase64: "base64data2",
+    owner_id: 2,
+    username: "user2"
+  }
+}
+
+
+imageDataList = [
+  {
+    id: "image1",
+    lat: 45.0,
+    lon: 9.0,
+    owner_id: 1,
+    topics: ["nature"]
+  },
+  {
+    id: "image2",
+    lat: 46.0,
+    lon: 10.0,
+    owner_id: 2,
+    topics: ["nature", "landscape"]
+  }
+]
+
+
+combinedData = [
+  {
+    id: "image1",
+    lat: 45.0,
+    lon: 9.0,
+    topics: ["nature"],
+    imageBase64: "base64data1",
+    owner_id: 1,
+    username: "user1"
+  },
+  {
+    id: "image2",
+    lat: 46.0,
+    lon: 10.0,
+    topics: ["nature", "landscape"],
+    imageBase64: "base64data2",
+    owner_id: 2,
+    username: "user2"
+  }
+]
+
+
+
+
+cachedData = [
+  {
+    id: "image1",
+    lat: 45.0,
+    lon: 9.0,
+    topics: ["nature"],
+    imageBase64: "base64data1",
+    owner_id: 1,
+    username: "user1"
+  },
+  {
+    id: "image2",
+    lat: 46.0,
+    lon: 10.0,
+    topics: ["nature", "landscape"],
+    imageBase64: "base64data2",
+    owner_id: 2,
+    username: "user2"
+  }
+]
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

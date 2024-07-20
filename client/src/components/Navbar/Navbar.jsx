@@ -13,7 +13,7 @@ import UserMenuItem from './UserMenuItem';
 
 export default function Navbar() {
   const { currentUser } = useContext(authContext);
-  const { setSearchTopic, setSearchPlace } = useContext(UtilsContext);
+  const { searchTopic, setSearchTopic, searchPlace, setSearchPlace } = useContext(UtilsContext);
   const { pathname } = useLocation();
 
   const isAuthPage = ['/login', '/signup'].includes(pathname);

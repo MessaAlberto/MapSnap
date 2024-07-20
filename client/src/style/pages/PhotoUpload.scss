@@ -159,4 +159,44 @@
       }
     }
   }
+
+  .popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+
+    .popup-content {
+      background: white;
+      color: #000;
+      padding: 2rem;
+      border-radius: 8px;
+      text-align: center;
+
+      h2 {
+        margin: 0 0 1rem;
+      }
+
+      button {
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-size: 1rem;
+
+        &:hover {
+          background: #0056b3;
+        }
+      }
+    }
+  }
+
 }

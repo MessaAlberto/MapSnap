@@ -7,19 +7,20 @@ import 'style/pages/PhotoUpload.scss';
 
 const PhotoUploadPage = () => {
   const { apiRoutes, appRoutes } = React.useContext(UtilsContext);
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const [photo, setPhoto] = useState(null);
   const [hashtags, setHashtags] = useState([]);
   const [hashtagInput, setHashtagInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [locationConsent, setLocationConsent] = useState(false);
+  const [showPopup, setShowPopup] = useState(false);
   const hashtagList = useMemo(() => hashtags.map((hashtag) => hashtag.slice(1)), [hashtags]);
 
   const handlePhotoChange = (file) => {
     if (file.size > 1024 * 1024) {
-      
-    console.log('Photo selected:', file);
+
+      console.log('Photo selected:', file);
       alert('File size should not exceed 1MB.');
       return;
     }
@@ -98,7 +99,10 @@ const PhotoUploadPage = () => {
 
           if (response.ok) {
             console.log('Photo and hashtags submitted successfully!');
-            // Handle successful submission
+            setPhoto(null);
+            setHashtags([]);
+            setHashtagInput('');
+            setShowPopup(true);
           } else {
             alert('Error submitting photo and hashtags. Please try again.');
           }
@@ -124,6 +128,10 @@ const PhotoUploadPage = () => {
   const handleLocationDecline = () => {
     setLocationConsent(false);
     navigate(appRoutes.HOME);
+  };
+
+  const closePopup = () => {
+    setShowPopup(false);
   };
 
 
@@ -186,6 +194,16 @@ const PhotoUploadPage = () => {
           onAccept={handleLocationConsent}
           onDecline={handleLocationDecline}
         />
+      )}
+
+      {showPopup && (
+        <div className="popup-overlay">
+          <div className="popup-content">
+            <h2>Success!</h2>
+            <p>Your photo has been uploaded successfully.</p>
+            <button onClick={closePopup}>Close</button>
+          </div>
+        </div>
       )}
     </div>
 

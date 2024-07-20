@@ -3,7 +3,7 @@ const http = require('http');
 const app = require('./app');
 const server = http.createServer(app);
 const io = require('socket.io')(server);
-const db = require('./database');
+const { db } = require('./database');
 const { setupMQTTConnection } = require('./mqttManager');
 const { testS3Connection } = require('./s3Manager');
 

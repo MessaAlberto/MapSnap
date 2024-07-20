@@ -80,7 +80,6 @@ async function uploadPhotoToS3(photoBase64, id) {
     };
 
     await s3Client.send(new PutObjectCommand(params));
-    console.log(`Uploaded photo to S3 with key: ${key}`);
     return true;
   } catch (error) {
     console.error('Error uploading photo to S3:', error);
