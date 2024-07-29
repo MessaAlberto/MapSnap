@@ -1,6 +1,7 @@
 import Map from 'components/Map/Map';
 import Navbar from 'components/Navbar/Navbar';
 import { authContext } from 'contexts/auth';
+import { UtilsContext } from 'contexts/utilsProvider';
 import Login from 'pages/Login';
 import NotFound from 'pages/NotFound';
 import SignUp from 'pages/SignUp';
@@ -8,7 +9,6 @@ import UploadPhoto from 'pages/UploadPhoto';
 import React, { useContext } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import 'style/App.scss';
-import { UtilsContext } from './contexts/utilsProvider';
 
 const App = () => {
   const { currentUser } = useContext(authContext);

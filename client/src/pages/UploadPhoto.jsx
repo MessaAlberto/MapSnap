@@ -103,6 +103,9 @@ const PhotoUploadPage = () => {
             setHashtags([]);
             setHashtagInput('');
             setShowPopup(true);
+          } else if (response.status === 401) {
+            navigate('/login');
+            alert('You need to be logged in to submit a photo.');
           } else {
             alert('Error submitting photo and hashtags. Please try again.');
           }

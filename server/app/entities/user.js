@@ -2,7 +2,6 @@ const router = require('express').Router();
 const { getUserByUsername } = require('../../database');
 
 
-
 router.get('/username/:username', async (req, res) => {
   const { username } = req.params;
 

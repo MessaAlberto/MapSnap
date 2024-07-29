@@ -5,15 +5,52 @@ import { UtilsContext } from './utilsProvider';
 export const authContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const { apiRoutes, appRoutes } = useContext(UtilsContext);
-  const [currentUser, setCurrentUser] = useState(() => {
-    console.log('localStorage.getItem(user): ', localStorage.getItem('user'));
-    const user = localStorage.getItem('user');
-    return user ? JSON.parse(user) : null;
-  });
-  console.log('currentUser: ', currentUser);
+  // const { apiRoutes, appRoutes } = useContext(UtilsContext);
+  // const [currentUser, setCurrentUser] = useState(() => {
+  //   console.log('localStorage.getItem(user): ', localStorage.getItem('user'));
+  //   const user = localStorage.getItem('user');
+  //   return user ? JSON.parse(user) : null;
+  // });
+  // console.log('currentUser: ', currentUser);
 
+  // const navigate = useNavigate();
+
+
+  const { apiRoutes, appRoutes } = useContext(UtilsContext);
+  const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if the token is valid on component mount
+    async function checkAuth() {
+      try {
+        const res = await fetch(apiRoutes.CHECK_AUTH, {
+          method: 'GET',
+          credentials: 'include', // Ensure cookies are sent
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          setCurrentUser(data.user);
+          localStorage.setItem('user', JSON.stringify(data.user));
+        } else {
+          if (localStorage.getItem('user')) {
+            alert('Your session has expired. Please log in again.');
+            navigate(appRoutes.LOGIN);
+          }
+          localStorage.removeItem('user');
+          setCurrentUser(null);
+          console.error('Failed to check authentication:', res.status);
+        }
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        logout(); // Error occurred, force logout
+      }
+    }
+
+    checkAuth();
+  }, [navigate]);
+
 
   useEffect(() => {
     if (currentUser) {
@@ -33,7 +70,7 @@ export function AuthProvider({ children }) {
 
       if (!res.ok) {
         if (res.status === 401) {
-          return res.status;
+          return res;
         }
         throw new Error('Failed to login');
       }
@@ -41,7 +78,7 @@ export function AuthProvider({ children }) {
       const data = await res.json();
       setCurrentUser(data.user);
       window.location.reload();
-      return res.status;
+      return res;
     } catch (error) {
       console.error('Error during login:', error.message);
       throw error;

@@ -33,13 +33,14 @@ const Login = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
+      setError(null);
       const res = await login({ username, password });
+      console.log('res: ', res);
       if (res.status === 401) {
         setError('Invalid credentials. Please try again.');
         return;
       }
     } catch (error) {
-      console.error('Error logging in:', error.message);
       setError('Error logging in. Please try again later.');
     }
   };

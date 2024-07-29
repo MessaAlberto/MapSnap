@@ -8,6 +8,23 @@ const secretToken = process.env.JWT_SECRET_TOKEN;
 const secretRefresh = process.env.JWT_SECRET_REFRESH;
 const expireToken = process.env.JWT_EXPIRE_TOKEN;
 const expireRefresh = process.env.JWT_EXPIRE_REFRESH;
+const { authenticateToken } = require('../middleware');
+
+
+router.get('/', authenticateToken, async (req, res) => {
+  const userId = req.user._id;
+
+  try {
+    const user = await db.getUserById(userId);
+    if (user) {
+      res.json({ user: { id: user.id, username: user.username } });
+    } else {
+      res.status(401).json({ error: 'Invalid token' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
