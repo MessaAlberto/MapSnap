@@ -160,6 +160,7 @@ public class searchImagesApp {
                 pstmt.setString(5, topicInput);
 
                 ResultSet resultSet = pstmt.executeQuery();
+                System.out.println("Result set length: " + resultSet.getFetchSize());
                 JSONArray imagesArray = new JSONArray();
 
                 while (resultSet.next()) {
@@ -199,6 +200,7 @@ public class searchImagesApp {
 
                 JSONObject response = new JSONObject();
                 response.put("imageDataList", new JSONArray(imagesArray));
+                System.out.println("Sending response to user " + userId + ": " + response);
 
                 mqttClient.publish(userId + "/image_data", new MqttMessage(response.toString().getBytes()));
             }

@@ -11,20 +11,24 @@ import { OSM } from 'ol/source';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { disconnectSocket, setupSocketConnection } from 'socketManager';
-import { geocodeAndCenterMap, sendSearchRequest } from './MapUtils';
-import { addMarker, clearMapImages } from './Marker';
-
 import 'style/components/Map.scss';
+import { geocodeAndCenterMap, sendSearchRequest } from './MapUtils';
+import { addMarker, checkOverlayOverlap, clearMapImages } from './Marker';
+import Popup from './Popup';
 
 const MapComponent = () => {
   const mapDivRef = useRef(null);
   const mapRef = useRef(null);
   const searchTopicRef = useRef('');
   const [isSearching, setIsSearching] = useState(false);
+  const [popupData, setPopupData] = useState(null);
   const { searchTopic, searchPlace, appRoutes } = useContext(UtilsContext);
   const navigate = useNavigate();
 
-  // Setup MQTT connection only once
+  const handleMarkerClick = (data) => {
+    setPopupData(data);
+  };
+
   useEffect(() => {
     setupSocketConnection(handleMqttMessage);
     return () => disconnectSocket();
@@ -42,9 +46,7 @@ const MapComponent = () => {
         center: fromLonLat(initialCoordinates),
         zoom: 13,
       }),
-      controls: defaultControls({ zoom: false, rotate: false, attribution: false }).extend([
-        new Zoom()
-      ])
+      controls: defaultControls({ zoom: false, rotate: false, attribution: false }).extend([new Zoom()])
     });
 
     mapRef.current = map;
@@ -59,7 +61,10 @@ const MapComponent = () => {
       sendSearchRequest(mapRef.current, searchTopicRef.current);
     }, 300);
 
-    map.on('moveend', debouncedSendSearchRequest);
+    map.on('moveend', () => {
+      debouncedSendSearchRequest();
+      checkOverlayOverlap(map);
+    });
 
     return () => {
       map.setTarget(null);
@@ -89,9 +94,13 @@ const MapComponent = () => {
     if (Array.isArray(data)) {
       data.forEach(item => {
         const { imageId, lat, lon, owner_username, topics, imageBase64 } = item;
-        addMarker(mapRef.current, imageId, lon, lat, owner_username, topics, imageBase64);
+        addMarker(mapRef.current, imageId, lon, lat, owner_username, topics, imageBase64, handleMarkerClick);
       });
     }
+  };
+
+  const closePopup = () => {
+    setPopupData(null);
   };
 
   return (
@@ -104,6 +113,7 @@ const MapComponent = () => {
       <div className="add-photo" onClick={() => navigate(appRoutes.UPLOAD_PHOTO)}>
         Add Your Photo
       </div>
+      {popupData && <Popup data={popupData} onClose={closePopup} />}
     </div>
   );
 };
