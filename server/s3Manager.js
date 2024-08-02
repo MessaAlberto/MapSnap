@@ -17,11 +17,10 @@ async function testS3Connection() {
   }
 }
 
-// Retrieve image contents from S3
-async function getFoldersContentsFromS3(idList) {
-  const foldersData = [];
 
-  for (const id of idList) {
+// Retrieve image contents from S3
+async function getFoldersContentsFromS3(idList, onProgress) {
+  const folderPromises = idList.map(async (id) => {
     const params = {
       Bucket: 'mqtt-images-storage',
       Prefix: `${id}/`
@@ -40,20 +39,27 @@ async function getFoldersContentsFromS3(idList) {
         const imaResponse = await s3Client.send(new GetObjectCommand(imaParams));
         const base64Image = await convertImageToBase64(imaResponse.Body);
 
-        foldersData.push({
+        return {
           id: id,
           imageBase64: base64Image
-        });
+        };
       } else {
         console.log(`Missing image file in folder ${id}`);
+        return null;
       }
     } catch (error) {
       console.error('Error retrieving folder contents:', error);
+      return null;
     }
-  }
+  });
 
-  return foldersData;
+  // Process each image as it becomes available
+  for (const promise of folderPromises) {
+    const result = await promise;
+    if (result) onProgress(result);
+  }
 }
+
 
 async function convertImageToBase64(stream) {
   const chunks = [];

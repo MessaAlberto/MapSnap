@@ -118,13 +118,10 @@ async function handleImageData(topic, message) {
       } else {
         io.to(socketId).emit('images_data', completeCachedData);
       }
-      // print ids of filteredCachedData
-      // console.log('filteredCachedData:', filteredCachedData.map(data => data.imageId));
     }
 
     if (idsToFetch.length > 0) {
-      const [imageBase64Data, userPromises] = await Promise.all([
-        getFoldersContentsFromS3(idsToFetch),
+      const [userPromises] = await Promise.all([
         Promise.all(idsToFetch.map(async (imageId) => {
           const data = imageDataList.find(data => data.imageId === imageId);
           if (!cachedImages[imageId]?.owner_username) {
@@ -138,36 +135,35 @@ async function handleImageData(topic, message) {
         }))
       ]);
 
-      imageBase64Data.forEach(imageData => {
+      await getFoldersContentsFromS3(idsToFetch, (imageData) => {
         cachedImages[imageData.id] = {
           ...cachedImages[imageData.id],
           imageBase64: imageData.imageBase64
         };
+
+        const combinedData = imageDataList.map(data => ({
+          ...data,
+          imageBase64: cachedImages[data.imageId]?.imageBase64 || null,
+          owner_username: cachedImages[data.imageId]?.owner_username || null
+        }));
+
+        const emitEvent = data.searchedForMap ? 'map_images' : 'images_data';
+        if (data.searchedForMap) {
+          const lastTopic = socketClientMap[socketId].lastTopic;
+          const filteredData = combinedData.filter(data => data.topics.includes(lastTopic));
+          io.to(socketId).emit(emitEvent, filteredData);
+        } else {
+          io.to(socketId).emit(emitEvent, combinedData);
+        }
       });
 
-      let filteredDataList = imageDataList;
-      let emitEvent = 'images_data';
-      if (data.searchedForMap) {
-        emitEvent = 'map_images';
-        const lastTopic = socketClientMap[socketId].lastTopic;
-        filteredDataList = imageDataList.filter(data => data.topics.includes(lastTopic));
-      }
-
-      const combinedData = filteredDataList.map(data => ({
-        ...data,
-        imageBase64: cachedImages[data.imageId]?.imageBase64 || null,
-        owner_username: cachedImages[data.imageId]?.owner_username || null
-      }));
-
       socketClientMap[socketId].images = cachedImages;
-      console.log('Sending image data:', combinedData.length);
-      io.to(socketId).emit(emitEvent, combinedData);
-      console.log('combinedData:', combinedData.map(data => data.imageId));
     }
   } catch (error) {
     console.error('Error processing images_data message:', error);
   }
 }
+
 
 module.exports = {
   socketClientMap,
