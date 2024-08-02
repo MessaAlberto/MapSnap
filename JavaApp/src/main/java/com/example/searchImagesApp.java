@@ -25,7 +25,7 @@ public class searchImagesApp {
     protected IMqttClient mqttClient;
     protected Connection dbConnection;
     private ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newCachedThreadPool();
-    private Set<String> userIdSet = new HashSet<>();
+    private Set<String> socketIdSet = new HashSet<>();
 
     public searchImagesApp() throws IOException {
         loadProperties();
@@ -75,53 +75,53 @@ public class searchImagesApp {
                 String jsonMessage = new String(message.getPayload());
                 try {
                     JSONObject jsonObject = new JSONObject(jsonMessage);
-                    String userId = jsonObject.getString("id");
+                    String socketId = jsonObject.getString("id");
 
-                    if (userIdSet.add(userId)) {
-                        System.out.println("New user connected: " + userId);
+                    if (socketIdSet.add(socketId)) {
+                        System.out.println("New user connected: " + socketId);
 
                         try {
-                            mqttClient.subscribe(userId + "/find_images", (topicIma, findImaMessage) -> {
+                            mqttClient.subscribe(socketId + "/find_images", (topicIma, findImaMessage) -> {
                                 String receivedMessage = new String(findImaMessage.getPayload());
                                 System.out.println(
-                                        "Received message on /find_images from user " + userId + ": "
+                                        "Received message on /find_images from user " + socketId + ": "
                                                 + receivedMessage);
-                                executorService.execute(() -> processFindIma(userId, receivedMessage));
+                                executorService.execute(() -> processFindIma(socketId, receivedMessage));
                             });
-                            System.out.println("Subscribed to " + userId + "/find_images" + " for user " + userId);
+                            System.out.println("Subscribed to " + socketId + "/find_images");
                         } catch (MqttException e) {
                             e.printStackTrace();
                         }
 
                     } else {
-                        System.out.println("User " + userId + " already exists in userIdSet");
+                        System.out.println("User " + socketId + " already exists in socketIdSet");
                     }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                // print userIdSet
-                System.out.println("userIdSet: " + userIdSet);
+                // print socketIdSet
+                System.out.println("socketIdSet: " + socketIdSet);
             });
             mqttClient.subscribe("userDisconnected", (topic, message) -> {
                 String jsonMessage = new String(message.getPayload());
                 try {
                     JSONObject jsonObject = new JSONObject(jsonMessage);
-                    String userId = jsonObject.getString("id");
+                    String socketId = jsonObject.getString("id");
 
-                    if (userIdSet.remove(userId)) {
-                        System.out.println("User disconnected: " + userId);
-                        mqttClient.unsubscribe(userId + "/find_images");
-                        System.out.println("Unsubscribed from " + userId + "/find_images" + " for user " + userId);
+                    if (socketIdSet.remove(socketId)) {
+                        System.out.println("User disconnected: " + socketId);
+                        mqttClient.unsubscribe(socketId + "/find_images");
+                        System.out.println("Unsubscribed from " + socketId + "/find_images" + " for user " + socketId);
                     } else {
-                        System.out.println("User " + userId + " not found in userIdSet");
+                        System.out.println("User " + socketId + " not found in socketIdSet");
                     }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                // print userIdSet
-                System.out.println("userIdSet: " + userIdSet);
+                // print socketIdSet
+                System.out.println("socketIdSet: " + socketIdSet);
             });
         } catch (MqttException e) {
             e.printStackTrace();
@@ -129,21 +129,60 @@ public class searchImagesApp {
         System.out.println("User listener started");
     }
 
-    protected void processFindIma(String userId, String message) {
+    protected void processFindIma(String socketId, String message) {
         try {
             JSONObject jsonMessage = new JSONObject(message);
+            Integer userId = jsonMessage.has("userId") ? jsonMessage.getInt("userId") : null;
 
+            JSONArray imagesArray;
+            JSONObject response = new JSONObject();
+
+            if (userId != null) {
+                // Search Images request by userId
+                imagesArray = findImagesByUserId(userId);
+            } else {
+                // Search Images request for the map
+                imagesArray = findImagesForMap(jsonMessage);
+                response.put("searchedForMap", true); 
+            }
+
+            response.put("imageDataList", imagesArray);
+            System.out.println("Sending response to user " + socketId + ": " + response);
+
+            mqttClient.publish(socketId + "/images_data", new MqttMessage(response.toString().getBytes()));
+
+        } catch (JSONException | MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JSONArray findImagesByUserId(Integer userId) {
+        String query = "SELECT i.id_ima, i.latitude, i.longitude, i.owner_id " +
+                "FROM images i " +
+                "WHERE i.owner_id = ?";
+    
+        try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
+            pstmt.setInt(1, userId);
+            ResultSet resultSet = pstmt.executeQuery();
+            return extractImagesFromResultSet(resultSet);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return new JSONArray();
+        }
+    }
+    
+    private JSONArray findImagesForMap(JSONObject jsonMessage) {
+        try {
             JSONObject bottomLeftObject = jsonMessage.getJSONObject("bottomLeft");
             double bottomLeftLong = bottomLeftObject.getDouble("lon");
             double bottomLeftLat = bottomLeftObject.getDouble("lat");
-
+    
             JSONObject topRightObject = jsonMessage.getJSONObject("topRight");
             double topRightLong = topRightObject.getDouble("lon");
             double topRightLat = topRightObject.getDouble("lat");
-
+    
             String topicInput = jsonMessage.getString("topic");
-
-            // Modifica la query per includere i topic e le coordinate
+    
             String query = "SELECT i.id_ima, i.latitude, i.longitude, i.owner_id " +
                     "FROM images i " +
                     "JOIN image_topic it ON i.id_ima = it.idr_ima " +
@@ -151,63 +190,64 @@ public class searchImagesApp {
                     "WHERE i.latitude BETWEEN ? AND ? " +
                     "AND i.longitude BETWEEN ? AND ? " +
                     "AND t.name = ?";
-
+    
             try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
                 pstmt.setDouble(1, bottomLeftLat);
                 pstmt.setDouble(2, topRightLat);
                 pstmt.setDouble(3, bottomLeftLong);
                 pstmt.setDouble(4, topRightLong);
                 pstmt.setString(5, topicInput);
-
+    
                 ResultSet resultSet = pstmt.executeQuery();
-                System.out.println("Result set length: " + resultSet.getFetchSize());
-                JSONArray imagesArray = new JSONArray();
-
-                while (resultSet.next()) {
-                    // get image details
-                    int imageId = resultSet.getInt("id_ima");
-                    String imageIdStr = resultSet.getString("id_ima");
-                    double latitude = resultSet.getDouble("latitude");
-                    double longitude = resultSet.getDouble("longitude");
-                    int ownerId = resultSet.getInt("owner_id");
-
-                    String queryTopic = "SELECT t.name " +
-                            "FROM topics t " +
-                            "JOIN image_topic it ON t.id_top = it.idr_top " +
-                            "WHERE it.idr_ima = ?";
-
-                    try (PreparedStatement pstmtTopic = dbConnection.prepareStatement(queryTopic)) {
-                        pstmtTopic.setInt(1, imageId);
-                        ResultSet resultSetTopic = pstmtTopic.executeQuery();
-
-                        JSONArray topicsArray = new JSONArray();
-                        while (resultSetTopic.next()) {
-                            String topic = resultSetTopic.getString("name");
-                            topicsArray.put(topic);
-                        }
-
-                        JSONObject imageObject = new JSONObject();
-                        imageObject.put("imageId", imageIdStr);
-                        imageObject.put("lat", latitude);
-                        imageObject.put("lon", longitude);
-                        imageObject.put("ownerId", ownerId);
-                        imageObject.put("topics", topicsArray);
-                        imagesArray.put(imageObject);
-                    } catch (SQLException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                JSONObject response = new JSONObject();
-                response.put("imageDataList", new JSONArray(imagesArray));
-                System.out.println("Sending response to user " + userId + ": " + response);
-
-                mqttClient.publish(userId + "/image_data", new MqttMessage(response.toString().getBytes()));
+                return extractImagesFromResultSet(resultSet);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return new JSONArray();
             }
-        } catch (SQLException | JSONException | MqttException e) {
+        } catch (JSONException e) {
             e.printStackTrace();
+            return new JSONArray();
         }
     }
+    
+    private JSONArray extractImagesFromResultSet(ResultSet resultSet) throws SQLException {
+        JSONArray imagesArray = new JSONArray();
+    
+        while (resultSet.next()) {
+            int imageId = resultSet.getInt("id_ima");
+            String imageIdStr = resultSet.getString("id_ima");
+            double latitude = resultSet.getDouble("latitude");
+            double longitude = resultSet.getDouble("longitude");
+            int ownerId = resultSet.getInt("owner_id");
+    
+            String queryTopic = "SELECT t.name " +
+                    "FROM topics t " +
+                    "JOIN image_topic it ON t.id_top = it.idr_top " +
+                    "WHERE it.idr_ima = ?";
+    
+            try (PreparedStatement pstmtTopic = dbConnection.prepareStatement(queryTopic)) {
+                pstmtTopic.setInt(1, imageId);
+                ResultSet resultSetTopic = pstmtTopic.executeQuery();
+    
+                JSONArray topicsArray = new JSONArray();
+                while (resultSetTopic.next()) {
+                    String topic = resultSetTopic.getString("name");
+                    topicsArray.put(topic);
+                }
+    
+                JSONObject imageObject = new JSONObject();
+                imageObject.put("imageId", imageIdStr);
+                imageObject.put("lat", latitude);
+                imageObject.put("lon", longitude);
+                imageObject.put("ownerId", ownerId);
+                imageObject.put("topics", topicsArray);
+                imagesArray.put(imageObject);
+            }
+        }
+    
+        return imagesArray;
+    }
+    
 
     protected void listenToUploads() {
         try {

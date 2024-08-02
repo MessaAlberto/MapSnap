@@ -1,4 +1,5 @@
 import { AuthProvider } from 'contexts/auth';
+import { SocketProvider } from 'contexts/socket';
 import { UtilsProvider } from 'contexts/utilsProvider';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
@@ -11,7 +12,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <UtilsProvider>
         <AuthProvider>
-          <App />
+          <SocketProvider>
+            <App />
+          </SocketProvider>
         </AuthProvider>
       </UtilsProvider>
     </BrowserRouter>

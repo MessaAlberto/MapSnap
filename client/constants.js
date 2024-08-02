@@ -7,6 +7,7 @@ export const API_ROUTES = {
   CHECK_USERNAME: `${API_BASE_URL}/user/username`,
   LOGOUT: `${API_BASE_URL}/auth/logout`,
   PHOTO: `${API_BASE_URL}/photo`,
+  MY_PHOTO: `${API_BASE_URL}/photo/my`,
 };
 
 export const APP_ROUTES = {
@@ -14,6 +15,7 @@ export const APP_ROUTES = {
   LOGIN: '/login',
   SIGNUP: '/signup',
   UPLOAD_PHOTO: '/upload-photo',
+  MY_PHOTO: '/my-photo',
   MAP_SNAP: '/map-snap',
 };
 

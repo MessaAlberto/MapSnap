@@ -3,6 +3,7 @@ import Navbar from 'components/Navbar/Navbar';
 import { authContext } from 'contexts/auth';
 import { UtilsContext } from 'contexts/utilsProvider';
 import Login from 'pages/Login';
+import MyPhoto from 'pages/MyPhoto';
 import NotFound from 'pages/NotFound';
 import SignUp from 'pages/SignUp';
 import UploadPhoto from 'pages/UploadPhoto';
@@ -48,6 +49,7 @@ const App = () => {
           <Route element={<AuthRoutes redirectTo={`${appRoutes.LOGIN}`} />}>
             {/* Add your authenticated routes here */}
             <Route path={`${appRoutes.UPLOAD_PHOTO}`} element={<UploadPhoto />} />
+            <Route path={`${appRoutes.MY_PHOTO}`} element={<MyPhoto />} />
           </Route>
 
           {/* Catch-all route for 404 */}

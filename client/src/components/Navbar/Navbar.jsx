@@ -16,11 +16,9 @@ export default function Navbar() {
   const { searchTopic, setSearchTopic, searchPlace, setSearchPlace } = useContext(UtilsContext);
   const { pathname } = useLocation();
 
-  const isAuthPage = ['/login', '/signup'].includes(pathname);
-  const isUploadPhotoPage = ['/upload-photo'].includes(pathname);
-
-  const showInputMenuItems = !isAuthPage && !isUploadPhotoPage;
-  const showImagesMenuItem = !isAuthPage && currentUser;
+  const excludedPages = ['/login', '/signup', '/upload-photo', '/my-photo'];
+  const showInputMenuItems = !excludedPages.includes(pathname);
+  const showImagesMenuItem = !excludedPages.slice(0, 2).includes(pathname) && currentUser;
 
   return (
     <nav className="navbar">

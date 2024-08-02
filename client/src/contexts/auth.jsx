@@ -1,21 +1,10 @@
+import { UtilsContext } from 'contexts/utilsProvider';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UtilsContext } from './utilsProvider';
 
 export const authContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  // const { apiRoutes, appRoutes } = useContext(UtilsContext);
-  // const [currentUser, setCurrentUser] = useState(() => {
-  //   console.log('localStorage.getItem(user): ', localStorage.getItem('user'));
-  //   const user = localStorage.getItem('user');
-  //   return user ? JSON.parse(user) : null;
-  // });
-  // console.log('currentUser: ', currentUser);
-
-  // const navigate = useNavigate();
-
-
   const { apiRoutes, appRoutes } = useContext(UtilsContext);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();

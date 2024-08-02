@@ -5,26 +5,34 @@ const server = http.createServer(app);
 const io = require('socket.io')(server);
 const { db } = require('./database');
 const { setupMQTTConnection } = require('./mqttManager');
-const { testS3Connection } = require('./s3Manager');
+const { setupSocketIO } = require('./socketManager');
 
-// Test S3 connection
-testS3Connection();
+// Initialize and start server
+async function startServer() {
+  try {
+    // Test S3 connection
+    await require('./s3Manager').testS3Connection();
 
-// Setup MQTT server connection
-setupMQTTConnection(io);
-
-// Connect to the database
-db.query('SELECT NOW()')
-  .then(data => {
+    // Connect to the database
+    const data = await db.query('SELECT NOW()');
     console.log('Connected to database. Current timestamp:', data[0].now);
-  })
-  .catch(error => {
-    console.error('Error connecting to database:', error);
-    process.exit(1);
-  });
 
-// Start the server
-const port = process.env.PORT || 3000;
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+    // Setup MQTT server connection
+    const client = await setupMQTTConnection();
+
+    // Setup Socket.IO
+    setupSocketIO(io, client);
+
+    // Start the server
+    const port = process.env.PORT || 3000;
+    server.listen(port, () => {
+      console.log(`Server running on port ${port}`);
+    });
+
+  } catch (error) {
+    console.error('Error starting the server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();

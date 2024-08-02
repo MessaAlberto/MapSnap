@@ -1,10 +1,11 @@
 const router = require('express').Router();
-const { uploadPhotoMQTT, removePhotoFromMQTT } = require('../../mqttManager');
 const path = require('path');
 const fs = require('fs').promises;
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
+const { uploadPhotoMQTT, removePhotoFromMQTT, getImaByOwnerId } = require('../../mqttManager');
+const { socketClientMap } = require('../../socketManager');
 const { uploadPhotoToS3 } = require('../../s3Manager');
 
 router.post('/', upload.single('photo'), async (req, res) => {
@@ -79,5 +80,28 @@ router.post('/', upload.single('photo'), async (req, res) => {
     res.status(500).send(error);
   }
 });
+
+router.get('/my', async (req, res) => {
+  const socketId = req.headers['socket-id'];
+
+  if (!socketId) {
+    return res.status(400).send('Socket ID is required');
+  }
+
+  if (!socketClientMap[socketId]) {
+    return res.status(404).send('Socket not found');
+  }
+
+  socketClientMap[socketId].lastTopic = socketId;
+
+  try {
+    await getImaByOwnerId(req.user._id, socketId);
+    res.status(202).send('Photo request initiated');
+  } catch (error) {
+    console.error('Error initiating photo request:', error);
+    res.status(500).send('Failed to initiate photo request');
+  }
+});
+
 
 module.exports = router;

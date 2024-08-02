@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getBottomLeft, getTopRight } from 'ol/extent';
 import { fromLonLat, toLonLat } from 'ol/proj';
-import { mqttPublish } from 'socketManager';
+import { MapSearchRequest } from 'socketManager';
 
 export const sendSearchRequest = (map, searchTopic) => {
   const view = map.getView();
@@ -17,7 +17,7 @@ export const sendSearchRequest = (map, searchTopic) => {
     topRight: { lon: topRight[0], lat: topRight[1] },
   };
 
-  mqttPublish(JSON.stringify(message));
+  MapSearchRequest(JSON.stringify(message));
 };
 
 export const geocodeAndCenterMap = async (place, map) => {

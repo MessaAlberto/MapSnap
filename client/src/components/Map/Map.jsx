@@ -1,5 +1,8 @@
 import { faCircleNotch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import Popup from 'components/Popup';
+import { authContext } from 'contexts/auth';
+import SocketContext from 'contexts/socket';
 import { UtilsContext } from 'contexts/utilsProvider';
 import { debounce } from 'lodash';
 import Map from 'ol/Map';
@@ -10,11 +13,11 @@ import { fromLonLat } from 'ol/proj';
 import { OSM } from 'ol/source';
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { disconnectSocket, setupSocketConnection } from 'socketManager';
+import { registerEventHandler, unregisterEventHandler } from 'socketManager';
 import 'style/components/Map.scss';
 import { geocodeAndCenterMap, sendSearchRequest } from './MapUtils';
 import { addMarker, checkOverlayOverlap, clearMapImages } from './Marker';
-import Popup from './Popup';
+
 
 const MapComponent = () => {
   const mapDivRef = useRef(null);
@@ -23,16 +26,23 @@ const MapComponent = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [popupData, setPopupData] = useState(null);
   const { searchTopic, searchPlace, appRoutes } = useContext(UtilsContext);
+  const { currentUser } = useContext(authContext);
   const navigate = useNavigate();
+  const socket = useContext(SocketContext);
 
   const handleMarkerClick = (data) => {
     setPopupData(data);
   };
 
   useEffect(() => {
-    setupSocketConnection(handleMqttMessage);
-    return () => disconnectSocket();
-  }, []);
+    if (socket) {
+      registerEventHandler('map_images', handleMqttMessage);
+
+      return () => {
+        unregisterEventHandler('map_images');
+      };
+    }
+  }, [socket]);
 
   useEffect(() => {
     if (!mapDivRef.current) return;
@@ -113,7 +123,7 @@ const MapComponent = () => {
       <div className="add-photo" onClick={() => navigate(appRoutes.UPLOAD_PHOTO)}>
         Add Your Photo
       </div>
-      {popupData && <Popup data={popupData} onClose={closePopup} />}
+      {popupData && <Popup data={popupData} onClose={closePopup} currentUser={currentUser} />}
     </div>
   );
 };

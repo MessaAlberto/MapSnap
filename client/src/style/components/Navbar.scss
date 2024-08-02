@@ -51,10 +51,12 @@ nav {
 
   // when not hovered
   &:not(:hover) {
+
     // disable menu-item
     .menu-input {
       display: none;
     }
+
     .start-research {
       display: none;
     }
@@ -89,6 +91,30 @@ nav {
 
       &:active {
         background: $sidebar-menu-item-active-background;
+      }
+
+      .menu-link {
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        color: inherit;
+
+        .menu-icon {
+          height: $sidebar-menu-icon-size;
+          min-width: $sidebar-menu-icon-size;
+          text-align: center;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+
+        .menu-text {
+          width: calc(#{$sidebar-width} * 3);
+          text-align: left;
+          display: flex;
+          justify-content: flex-start;
+          align-items: center;
+        }
       }
     }
 
