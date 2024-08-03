@@ -1,4 +1,4 @@
-const { S3Client, ListBucketsCommand, ListObjectsV2Command, GetObjectCommand, PutObjectCommand} = require('@aws-sdk/client-s3');
+const { S3Client, ListBucketsCommand, ListObjectsV2Command, GetObjectCommand, PutObjectCommand, DeleteObjectCommand} = require('@aws-sdk/client-s3');
 const { fromIni } = require('@aws-sdk/credential-provider-ini');
 
 // Configurazione client S3
@@ -54,10 +54,10 @@ async function getFoldersContentsFromS3(idList, onProgress) {
   });
 
   // Process each image as it becomes available
-  for (const promise of folderPromises) {
-    const result = await promise;
+  const results = await Promise.all(folderPromises);
+  results.forEach(result => {
     if (result) onProgress(result);
-  }
+  });
 }
 
 
@@ -93,4 +93,24 @@ async function uploadPhotoToS3(photoBase64, id) {
   }
 }
 
-module.exports = { testS3Connection, getFoldersContentsFromS3, uploadPhotoToS3 };
+// Function to delete photo from S3
+async function deletePhotoFromS3(id) {
+  const bucketName = 'mqtt-images-storage';
+  const key = `${id}/ima.jpg`;
+
+  try {
+    const params = {
+      Bucket: bucketName,
+      Key: key
+    };
+
+    await s3Client.send(new DeleteObjectCommand(params));
+    console.log(`Photo ${id} deleted from S3`);
+    return true;
+  } catch (error) {
+    console.error('Error deleting photo from S3:', error);
+    return false;
+  }
+}
+
+module.exports = { testS3Connection, getFoldersContentsFromS3, uploadPhotoToS3, deletePhotoFromS3 };

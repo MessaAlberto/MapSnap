@@ -108,12 +108,12 @@ function uploadPhotoMQTT(payload) {
 
 }
 
-function removePhotoFromMQTT(imageId) {
+function removePhotoFromMQTT(imageId, userId) {
   return new Promise((resolve, reject) => {
     const requestId = uuidv4();
     deleteStatusMap.set(requestId, { resolve, reject });
 
-    publish('deletePhoto', { imageId, requestId }).catch(err => {
+    publish('deletePhoto', { imageId, userId, requestId }).catch(err => {
       deleteStatusMap.delete(requestId);
       reject(err);
     });

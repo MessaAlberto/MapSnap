@@ -8,6 +8,7 @@ export const API_ROUTES = {
   LOGOUT: `${API_BASE_URL}/auth/logout`,
   PHOTO: `${API_BASE_URL}/photo`,
   MY_PHOTO: `${API_BASE_URL}/photo/my`,
+  DELETE_PHOTO: `${API_BASE_URL}/photo`,
 };
 
 export const APP_ROUTES = {

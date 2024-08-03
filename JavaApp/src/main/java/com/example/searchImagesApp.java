@@ -361,13 +361,15 @@ public class searchImagesApp {
                 JSONObject jsonObject = new JSONObject(jsonMessage);
                 System.out.println("Received delete request: " + jsonObject);
                 int imageId = jsonObject.getInt("imageId");
+                int userId = jsonObject.getInt("userId");
                 String requestId = jsonObject.getString("requestId");
                 JSONObject response = new JSONObject();
 
                 try {
-                    String sqlDeleteImage = "DELETE FROM images WHERE id_ima = ? RETURNING id_ima";
+                    String sqlDeleteImage = "DELETE FROM images WHERE id_ima = ? AND owner_id = ? RETURNING id_ima";
                     try (PreparedStatement pstmtDeleteImage = dbConnection.prepareStatement(sqlDeleteImage)) {
                         pstmtDeleteImage.setInt(1, imageId);
+                        pstmtDeleteImage.setInt(2, userId);
                         ResultSet rs = pstmtDeleteImage.executeQuery();
 
                         if (rs.next()) {

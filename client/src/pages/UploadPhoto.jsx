@@ -2,12 +2,14 @@ import PhotoUpload from 'components/DragAndDrop';
 import LocationConsent from 'components/LocationConsent';
 import { UtilsContext } from 'contexts/utilsProvider';
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import 'style/pages/PhotoUpload.scss';
 
 const PhotoUploadPage = () => {
-  const { apiRoutes, appRoutes } = React.useContext(UtilsContext);
+  const { apiRoutes } = React.useContext(UtilsContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { returnTo } = location.state || {}; 
 
   const [photo, setPhoto] = useState(null);
   const [hashtags, setHashtags] = useState([]);
@@ -130,7 +132,7 @@ const PhotoUploadPage = () => {
 
   const handleLocationDecline = () => {
     setLocationConsent(false);
-    navigate(appRoutes.HOME);
+    navigate(returnTo || '/');
   };
 
   const closePopup = () => {

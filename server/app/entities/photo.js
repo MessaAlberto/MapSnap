@@ -6,7 +6,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage });
 const { uploadPhotoMQTT, removePhotoFromMQTT, getImaByOwnerId } = require('../../mqttManager');
 const { socketClientMap } = require('../../socketManager');
-const { uploadPhotoToS3 } = require('../../s3Manager');
+const { uploadPhotoToS3, deletePhotoFromS3 } = require('../../s3Manager');
 
 router.post('/', upload.single('photo'), async (req, res) => {
   const photo = req.file;
@@ -56,7 +56,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
     const uploadSuccess = await uploadPhotoToS3(photoBase64, imageId);
     if (!uploadSuccess) {
       try {
-        const removalResult = await removePhotoFromMQTT(imageId);
+        const removalResult = await removePhotoFromMQTT(imageId, userId);
         console.log('Photo removal result:', removalResult);
       } catch (removalError) {
         console.error('Error removing photo from MQTT:', removalError);
@@ -71,7 +71,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
     console.error('Error:', error);
 
     try {
-      const removalResult = await removePhotoFromMQTT(payload.imageId);
+      const removalResult = await removePhotoFromMQTT(payload.imageId, userId);
       console.log('Photo removal result:', removalResult);
     } catch (removalError) {
       console.error('Error removing photo from MQTT:', removalError);
@@ -92,14 +92,37 @@ router.get('/my', async (req, res) => {
     return res.status(404).send('Socket not found');
   }
 
-  socketClientMap[socketId].lastTopic = socketId;
-
   try {
     await getImaByOwnerId(req.user._id, socketId);
     res.status(202).send('Photo request initiated');
   } catch (error) {
     console.error('Error initiating photo request:', error);
     res.status(500).send('Failed to initiate photo request');
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  const imageId = req.params.id;
+  const userId = req.user._id;
+
+  try {
+    // Remove the photo from MQTT
+    const removalResult = await removePhotoFromMQTT(imageId, userId);
+    console.log('Photo removal result:', removalResult);
+    if (removalResult.status !== 'Deletion successful') {
+      return res.status(500).send('Delete failed from MQTT');
+    }
+
+    // Remove the photo from S3
+    const s3RemovalSuccess = await deletePhotoFromS3(imageId);
+    if (!s3RemovalSuccess) {
+      return res.status(500).send('Delete failed from S3');
+    }
+
+    res.status(200).send(removalResult);
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+    res.status(500).send(error);
   }
 });
 

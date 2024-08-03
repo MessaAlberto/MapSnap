@@ -4,6 +4,7 @@
 $spinner-top: 1.25rem;
 $spinner-right: 1.25rem;
 $spinner-z-index: 9999;
+$message-display-duration: 0.5s;
 
 #map {
   position: absolute;
@@ -59,22 +60,6 @@ $spinner-z-index: 9999;
 .topic-researched {
   position: absolute;
   top: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgba(255, 255, 255, 0.9);
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2);
-  z-index: 990;
-  text-align: center;
-  font-size: 1rem;
-  color: #333;
-  border: 1px solid #007bff;
-}
-
-.add-photo {
-  position: absolute;
-  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
   background-color: rgba(255, 255, 255, 0.9);
@@ -148,4 +133,23 @@ $spinner-z-index: 9999;
   font-size: 14px;
   position: absolute;
   transform: translate(-50%, -50%);
+}
+
+
+.no-photos-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.2);
+  z-index: 990;
+  text-align: center;
+  font-size: 1rem;
+  color: #333;
+  border: 1px solid #007bff;
+  transition: opacity $message-display-duration ease-in-out;
+  pointer-events: none;
 }

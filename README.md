@@ -10,7 +10,6 @@ task:
 - [x] recuperare tutte info da ricerca foto (owner da fare, topic fatto)
 - [x] customizzare openlayers con css e funzioni per hover(popUp)
 - [x] mobile css
-- [x] pagina my pics
 - [x] deployare app
 
 

@@ -1,5 +1,6 @@
 import { faCircleNotch } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import AddPhotoButton from 'components/AddPhotoButton';
 import Popup from 'components/Popup';
 import { authContext } from 'contexts/auth';
 import SocketContext from 'contexts/socket';
@@ -12,7 +13,6 @@ import { Tile as TileLayer } from 'ol/layer';
 import { fromLonLat } from 'ol/proj';
 import { OSM } from 'ol/source';
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { registerEventHandler, unregisterEventHandler } from 'socketManager';
 import 'style/components/Map.scss';
 import { geocodeAndCenterMap, sendSearchRequest } from './MapUtils';
@@ -25,12 +25,19 @@ const MapComponent = () => {
   const searchTopicRef = useRef('');
   const [isSearching, setIsSearching] = useState(false);
   const [popupData, setPopupData] = useState(null);
+  const [noPhotosMessage, setNoPhotosMessage] = useState(''); 
   const { searchTopic, searchPlace, appRoutes } = useContext(UtilsContext);
   const { currentUser } = useContext(authContext);
-  const navigate = useNavigate();
   const socket = useContext(SocketContext);
 
+
+  const refreshMap = () => {
+    clearMapImages(mapRef.current);
+    sendSearchRequest(mapRef.current, searchTopic);
+  };
+
   const handleMarkerClick = (data) => {
+    console.log('Marker clicked:', data);
     setPopupData(data);
   };
 
@@ -102,6 +109,12 @@ const MapComponent = () => {
   const handleMqttMessage = (data) => {
     setIsSearching(false);
     if (Array.isArray(data)) {
+      if (data.length === 0) {
+        setNoPhotosMessage('No photos found');
+        setTimeout(() => setNoPhotosMessage(''), 500);
+        return;
+      }
+
       data.forEach(item => {
         const { imageId, lat, lon, owner_username, topics, imageBase64 } = item;
         addMarker(mapRef.current, imageId, lon, lat, owner_username, topics, imageBase64, handleMarkerClick);
@@ -120,10 +133,17 @@ const MapComponent = () => {
       <div id='spinner' className={`spinner ${isSearching ? 'visible' : 'hidden'}`}>
         <FontAwesomeIcon icon={faCircleNotch} spin size='xl' style={{ color: '#000000' }} />
       </div>
-      <div className="add-photo" onClick={() => navigate(appRoutes.UPLOAD_PHOTO)}>
-        Add Your Photo
-      </div>
-      {popupData && <Popup data={popupData} onClose={closePopup} currentUser={currentUser} />}
+      <AddPhotoButton returnTo={appRoutes.HOME} />
+      {popupData && 
+        <Popup 
+          data={popupData} 
+          onClose={closePopup} 
+          currentUser={currentUser} 
+          onDeleteSuccess={refreshMap}
+        />
+      }
+
+      {noPhotosMessage && <div className="no-photos-message">{noPhotosMessage}</div>}
     </div>
   );
 };

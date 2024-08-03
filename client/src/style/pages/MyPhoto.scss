@@ -2,11 +2,11 @@
   padding: 20px;
   width: 100%;
   margin: 0 auto;
-  height: 100%; /* Imposta l'altezza massima del contenitore */
-  overflow-y: auto; /* Abilita lo scrolling verticale */
-  border-radius: 8px; /* Aggiungi angoli arrotondati */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Aggiungi ombra al contenitore */
-  
+  height: 100%;
+  overflow-y: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
   h2 {
     text-align: center;
     margin-bottom: 20px;
@@ -14,11 +14,18 @@
     color: #fff;
   }
 
+  p {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 16px;
+    color: #fff;
+  }
+
   .photo-wrapper {
     display: flex;
-    flex-wrap: wrap; /* Permette alle immagini di andare su più righe */
-    justify-content: center; /* Centra le immagini orizzontalmente */
-    gap: 20px; /* Spazio tra le immagini */
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
   }
 
   .photo-item {
@@ -28,8 +35,8 @@
     overflow: hidden;
     transition: transform 0.2s;
     position: relative;
-    width: 200px; /* Dimensione fissa */
-    height: 200px; /* Dimensione fissa */
+    width: 200px;
+    height: 200px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -39,13 +46,13 @@
       opacity: 1;
       visibility: visible;
     }
-    
+
     img {
       width: 100%;
       height: 100%;
-      object-fit: cover; /* Adatta l'immagine per coprire completamente il contenitore */
+      object-fit: cover;
     }
-    
+
     .photo-info {
       position: absolute;
       bottom: 0;
@@ -55,16 +62,16 @@
       color: white;
       padding: 10px;
       font-size: 14px;
-      text-align: left; /* Allinea il testo a sinistra */
-      box-sizing: border-box; /* Include padding e border nel calcolo delle dimensioni */
-      opacity: 0; /* Nasconde le informazioni inizialmente */
-      visibility: hidden; /* Nasconde le informazioni inizialmente */
+      text-align: left;
+      box-sizing: border-box;
+      opacity: 0;
+      visibility: hidden;
       transition: opacity 0.3s, visibility 0.3s;
-      
+
       p {
         margin: 5px 0;
       }
-      
+
       strong {
         color: #ffcc00;
       }

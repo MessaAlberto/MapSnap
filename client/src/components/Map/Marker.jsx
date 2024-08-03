@@ -118,7 +118,7 @@ export const addMarker = (map, id, lon, lat, owner_username, topics, imageBase64
   overlay.setPosition(fromLonLat([lon, lat]));
   markerMap.set(id, overlay);
 
-  markerElement.addEventListener('click', () => onClick({ owner_username, topics, imageBase64 }));
+  markerElement.addEventListener('click', () => onClick({ imageId: id, owner_username, topics, imageBase64 }));
 
   checkOverlayOverlap(map);
 };

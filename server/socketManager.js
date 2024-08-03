@@ -17,7 +17,7 @@ function setupSocketIO(ioTosetUP, mqttClientToSetUP) {
     socketClientMap[socket.id] = { images: {} };
     console.log('Active socket IDs:', Object.keys(socketClientMap));
 
-    socket.on('images_data', async (data) => {
+    socket.on('map_search_request', async (data) => {
       findImagesOnMap(socket, data);
     });
 
@@ -41,16 +41,28 @@ function findImagesOnMap(socket, data) {
   console.log('Received search request on topic:', parsedData.topic);
   socketClientMap[socket.id].lastTopic = topic;
 
-  const expandedCoordinates = expandCoordinates(bottomLeft, topRight);
+  // const expandedCoordinates = expandCoordinates(bottomLeft, topRight);
+  // const request = {
+  //   topic: parsedData.topic,
+  //   bottomLeft: {
+  //     lon: expandedCoordinates.bottomLeft[0],
+  //     lat: expandedCoordinates.bottomLeft[1]
+  //   },
+  //   topRight: {
+  //     lon: expandedCoordinates.topRight[0],
+  //     lat: expandedCoordinates.topRight[1]
+  //   },
+  // };
+
   const request = {
     topic: parsedData.topic,
     bottomLeft: {
-      lon: expandedCoordinates.bottomLeft[0],
-      lat: expandedCoordinates.bottomLeft[1]
+      lon: bottomLeft[0],
+      lat: bottomLeft[1]
     },
     topRight: {
-      lon: expandedCoordinates.topRight[0],
-      lat: expandedCoordinates.topRight[1]
+      lon: topRight[0],
+      lat: topRight[1]
     },
   };
 
@@ -84,9 +96,11 @@ async function handleImageData(topic, message) {
 
   try {
     let imageDataList = data.imageDataList;
+    const emitEvent = data.searchedForMap ? 'map_images' : 'images_data';
+
     if (imageDataList.length === 0) {
       console.log('No image data found');
-      io.to(socketId).emit('images_data', []);
+      io.to(socketId).emit(emitEvent, []);
       return;
     }
 
@@ -114,9 +128,11 @@ async function handleImageData(topic, message) {
       if (data.searchedForMap) {
         const lastTopic = socketClientMap[socketId].lastTopic;
         const filteredCachedData = completeCachedData.filter(data => data.topics.includes(lastTopic));
-        io.to(socketId).emit('map_images', filteredCachedData);  
+        io.to(socketId).emit('map_images', filteredCachedData);
+        console.log('imagesId:', filteredCachedData.map(data => data = data.imageId));
       } else {
         io.to(socketId).emit('images_data', completeCachedData);
+        console.log('imagesId:', completeCachedData.map(data => data = data.imageId));
       }
     }
 
@@ -141,20 +157,39 @@ async function handleImageData(topic, message) {
           imageBase64: imageData.imageBase64
         };
 
-        const combinedData = imageDataList.map(data => ({
-          ...data,
-          imageBase64: cachedImages[data.imageId]?.imageBase64 || null,
-          owner_username: cachedImages[data.imageId]?.owner_username || null
-        }));
+        const updatedData = imageDataList
+          .filter(data => data.imageId === imageData.id)
+          .map(data => ({
+            ...data,
+            imageBase64: imageData.imageBase64,
+            owner_username: cachedImages[imageData.id]?.owner_username || null
+          }));
 
-        const emitEvent = data.searchedForMap ? 'map_images' : 'images_data';
         if (data.searchedForMap) {
           const lastTopic = socketClientMap[socketId].lastTopic;
-          const filteredData = combinedData.filter(data => data.topics.includes(lastTopic));
+          const filteredData = updatedData.filter(data => data.topics.includes(lastTopic));
           io.to(socketId).emit(emitEvent, filteredData);
+          // console imageId of sended images
+          console.log('imagesId filtered:', filteredData.map(data => data = data.imageId));
         } else {
-          io.to(socketId).emit(emitEvent, combinedData);
+          io.to(socketId).emit(emitEvent, updatedData);
+          console.log('imagesId updated:', updatedData.map(data => data = data.imageId));
         }
+
+        // const combinedData = imageDataList.map(data => ({
+        //   ...data,
+        //   imageBase64: cachedImages[data.imageId]?.imageBase64 || null,
+        //   owner_username: cachedImages[data.imageId]?.owner_username || null
+        // }));
+
+        // const emitEvent = data.searchedForMap ? 'map_images' : 'images_data';
+        // if (data.searchedForMap) {
+        //   const lastTopic = socketClientMap[socketId].lastTopic;
+        //   const filteredData = combinedData.filter(data => data.topics.includes(lastTopic));
+        //   io.to(socketId).emit(emitEvent, filteredData);
+        // } else {
+        //   io.to(socketId).emit(emitEvent, combinedData);
+        // }
       });
 
       socketClientMap[socketId].images = cachedImages;

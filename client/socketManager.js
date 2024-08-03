@@ -53,7 +53,7 @@ export function unregisterEventHandler(event) {
 
 export function MapSearchRequest(message) {
   if (socket) {
-    socket.emit('images_data', { message });
+    socket.emit('map_search_request', { message });
   } else {
     console.error('Socket not initialized. Call setupSocketConnection first.');
   }
