@@ -4,6 +4,7 @@ import { authContext } from 'contexts/auth';
 import SocketContext from 'contexts/socket';
 import { UtilsContext } from 'contexts/utilsProvider';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { registerEventHandler, unregisterEventHandler } from 'socketManager';
 import 'style/pages/MyPhoto.scss';
 
@@ -13,7 +14,8 @@ const MyPhoto = () => {
   const socket = useContext(SocketContext);
   const [photos, setPhotos] = useState([]);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [loading, setLoading] = useState(true); 
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();  
 
   const fetchPhotos = useCallback(async () => {
     setLoading(true);  
@@ -83,6 +85,11 @@ const MyPhoto = () => {
     setSelectedPhoto(null);
   };
 
+  const handleBringMeThere = (photo) => {
+    navigate(appRoutes.HOME, { state: { photo } });
+  };
+
+
   return (
     <div className="my-photo-container">
       <h2>My Photos</h2>
@@ -116,6 +123,8 @@ const MyPhoto = () => {
           onClose={handleClosePopup} 
           currentUser={currentUser}
           onDeleteSuccess={handleDeleteSuccess}
+          showBringMeThere={true}
+          onBringMeThere={handleBringMeThere}
         />
       )}
 

@@ -6,9 +6,7 @@ task:
 - [x] controllare validità dati nei server e javaApp
 - [x] change everywhere photo in image or viceversa
 
-
-- [x] recuperare tutte info da ricerca foto (owner da fare, topic fatto)
-- [x] customizzare openlayers con css e funzioni per hover(popUp)
+- [x] like/dislike
 - [x] mobile css
 - [x] deployare app
 

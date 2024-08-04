@@ -13,6 +13,7 @@ import { Tile as TileLayer } from 'ol/layer';
 import { fromLonLat } from 'ol/proj';
 import { OSM } from 'ol/source';
 import React, { useContext, useEffect, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { registerEventHandler, unregisterEventHandler } from 'socketManager';
 import 'style/components/Map.scss';
 import { geocodeAndCenterMap, sendSearchRequest } from './MapUtils';
@@ -29,7 +30,8 @@ const MapComponent = () => {
   const { searchTopic, searchPlace, appRoutes } = useContext(UtilsContext);
   const { currentUser } = useContext(authContext);
   const socket = useContext(SocketContext);
-
+  const location = useLocation();
+  const navigate = useNavigate();
 
   const refreshMap = () => {
     clearMapImages(mapRef.current);
@@ -82,6 +84,16 @@ const MapComponent = () => {
       debouncedSendSearchRequest();
       checkOverlayOverlap(map);
     });
+
+    if (location.state && location.state.photo) {
+      console.log('Location state:', location.state);
+      const { photo } = location.state;
+      const coordinates = fromLonLat([photo.lon, photo.lat]);
+      map.getView().animate({ center: coordinates, zoom: 15 });
+
+      addMarker(map, photo.imageId, photo.lon, photo.lat, photo.owner_username, photo.topics, photo.imageBase64, handleMarkerClick);
+      navigate(location.pathname, { replace: true });;
+    }
 
     return () => {
       map.setTarget(null);
