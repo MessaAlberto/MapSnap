@@ -6,14 +6,19 @@ task:
 - [x] controllare validità dati nei server e javaApp
 - [x] change everywhere photo in image or viceversa
 
+- [x] spostare db degli user in javaapp, perchè ora socket è stabile per tutta sessione e gli eventi gestibili facilmente
 - [x] like/dislike
 - [x] mobile css
 - [x] deployare app
+- [x] sistemare ricerca camelCase, parti di parole
 
 
-express ingrandisce l'area di ricerca del client view di 25 volte, per evitare di caricare nuovamente le immagini. 
 
-cache delle foto su express per evitare di richiderle ad s3
+io sto facendo tutto questo con l'idea che il server express che girerà su qualche servizio chissà dove possa collegarsi al mio server mqtt del mio pc fisso. quindi le cose da fare penso siano:
+su express, assegnare l'indirizzo pubblico del pc fisso al server express. cosi ogni communicazione verso l'mqtt che parte da express sarà inviata all'indirizzo di casa mia.
+Dopo diche devo configurare il mio router di casa in modo che possa indirizzare le connessioni ricevute sulla porta 1883 e 9001 all'indirizzo privato del mio pc. 
+e quinidi sul mio pc settare i firewall per accettare connessioni esterne su quelle porte?
+
 
 
 

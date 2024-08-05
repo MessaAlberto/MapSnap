@@ -1,4 +1,14 @@
-const API_BASE_URL = '/api'; // prefix for all API routes
+const isDevelopment = import.meta.env.MODE === 'development';
+const API_BASE_URL = isDevelopment ? '/api' : ''; 
+
+if (isDevelopment) {
+  console.log("Siamo in modalità sviluppo");
+  // Esegui operazioni specifiche per lo sviluppo
+} else {
+  console.log("Siamo in modalità produzione");
+  // Esegui operazioni specifiche per la produzione
+}
+
 
 export const API_ROUTES = {
   REGISTER: `${API_BASE_URL}/auth/register`,
@@ -20,4 +30,6 @@ export const APP_ROUTES = {
   MAP_SNAP: '/map-snap',
 };
 
-export const EXPRESS_SERVER_API = 'http://localhost:3000';
+// export const EXPRESS_SERVER_API = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// export const EXPRESS_SERVER_API = 'http://localhost:3000';
+export const EXPRESS_SERVER_API = 'https://310c-146-247-70-238.ngrok-free.app';

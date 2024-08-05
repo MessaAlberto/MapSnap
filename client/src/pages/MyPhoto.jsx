@@ -9,16 +9,16 @@ import { registerEventHandler, unregisterEventHandler } from 'socketManager';
 import 'style/pages/MyPhoto.scss';
 
 const MyPhoto = () => {
-  const { apiRoutes, appRoutes } = useContext(UtilsContext); 
+  const { apiRoutes, appRoutes } = useContext(UtilsContext);
   const { currentUser } = useContext(authContext);
   const socket = useContext(SocketContext);
   const [photos, setPhotos] = useState([]);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();  
+  const navigate = useNavigate();
 
   const fetchPhotos = useCallback(async () => {
-    setLoading(true);  
+    setLoading(true);
     try {
       const response = await fetch(apiRoutes.MY_PHOTO, {
         method: 'GET',
@@ -56,7 +56,7 @@ const MyPhoto = () => {
 
         return Array.from(photosMap.values());
       });
-      
+
       setLoading(false);
     };
 
@@ -97,11 +97,16 @@ const MyPhoto = () => {
       {loading ? (
         <p>Loading photos, please wait...</p>
       ) : (
-        <div className="photo-wrapper">
+        <>
           {photos.length === 0 ? (
             <p>No photos available</p>
           ) : (
-            photos.map(photo => (
+            <p className="photo-count">
+              {photos.length === 1 ? `${photos.length} photo posted` : `${photos.length} photos posted`}
+            </p>
+          )}
+          <div className="photo-wrapper">
+            {photos.map(photo => (
               <div
                 key={photo.imageId}
                 className="photo-item"
@@ -113,23 +118,23 @@ const MyPhoto = () => {
                   <p><strong>Topics:</strong> {photo.topics.join(', ')}</p>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        </>
       )}
       {selectedPhoto && (
-        <Popup 
-          data={selectedPhoto} 
-          onClose={handleClosePopup} 
+        <Popup
+          data={selectedPhoto}
+          onClose={handleClosePopup}
           currentUser={currentUser}
           onDeleteSuccess={handleDeleteSuccess}
           showBringMeThere={true}
           onBringMeThere={handleBringMeThere}
         />
       )}
-
     </div>
   );
 };
 
-export default MyPhoto;
+
+  export default MyPhoto;

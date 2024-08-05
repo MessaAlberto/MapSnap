@@ -7,12 +7,13 @@ let mqttClient;
 let uploadStatusMap = new Map();
 let deleteStatusMap = new Map();
 
-function getImaByOwnerId(userId, socketId) {
-  return publish(socketId + '/find_images', { userId });
-}
-
 function setupMQTTConnection() {
-  mqttClient = mqtt.connect(`ws://${process.env.MQTT_BROKER_IP}:${process.env.MQTT_BROKER_PORT}`);
+  mqttClient = mqtt.connect(`ws://${process.env.MQTT_BROKER_IP}:${process.env.MQTT_BROKER_PORT}`,
+    {
+      username: process.env.MQTT_BROKER_USER,
+      password: process.env.MQTT_BROKER_PASS,
+    }
+  );
 
   mqttClient.on('connect', () => {
     console.log('Connected to MQTT broker');
@@ -127,6 +128,9 @@ function removePhotoFromMQTT(imageId, userId) {
   });
 }
 
+function getImaByOwnerId(userId, socketId) {
+  return publish(socketId + '/find_images', { userId });
+}
 
 
 module.exports = {

@@ -14,8 +14,10 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -61,9 +63,17 @@ public class searchImagesApp {
 
     protected void connectToMQTTBroker() throws MqttException {
         String mqttBroker = properties.getProperty("mqtt.broker");
+        String mqttUsername = properties.getProperty("mqtt.username");
+        String mqttPassword = properties.getProperty("mqtt.password");
+
         try {
-            mqttClient = new MqttClient(mqttBroker, "JavaApp");
-            mqttClient.connect();
+            mqttClient = new MqttClient(mqttBroker, "JavaApp", new MemoryPersistence());
+
+            MqttConnectOptions connOpts = new MqttConnectOptions();
+            connOpts.setUserName(mqttUsername);
+            connOpts.setPassword(mqttPassword.toCharArray());
+
+            mqttClient.connect(connOpts);
         } catch (MqttException e) {
             throw new MqttException(e);
         }
@@ -143,7 +153,7 @@ public class searchImagesApp {
             } else {
                 // Search Images request for the map
                 imagesArray = findImagesForMap(jsonMessage);
-                response.put("searchedForMap", true); 
+                response.put("searchedForMap", true);
             }
 
             response.put("imageDataList", imagesArray);
@@ -160,7 +170,7 @@ public class searchImagesApp {
         String query = "SELECT i.id_ima, i.latitude, i.longitude, i.owner_id " +
                 "FROM images i " +
                 "WHERE i.owner_id = ?";
-    
+
         try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
             pstmt.setInt(1, userId);
             ResultSet resultSet = pstmt.executeQuery();
@@ -170,19 +180,19 @@ public class searchImagesApp {
             return new JSONArray();
         }
     }
-    
+
     private JSONArray findImagesForMap(JSONObject jsonMessage) {
         try {
             JSONObject bottomLeftObject = jsonMessage.getJSONObject("bottomLeft");
             double bottomLeftLong = bottomLeftObject.getDouble("lon");
             double bottomLeftLat = bottomLeftObject.getDouble("lat");
-    
+
             JSONObject topRightObject = jsonMessage.getJSONObject("topRight");
             double topRightLong = topRightObject.getDouble("lon");
             double topRightLat = topRightObject.getDouble("lat");
-    
+
             String topicInput = jsonMessage.getString("topic");
-    
+
             String query = "SELECT i.id_ima, i.latitude, i.longitude, i.owner_id " +
                     "FROM images i " +
                     "JOIN image_topic it ON i.id_ima = it.idr_ima " +
@@ -190,14 +200,14 @@ public class searchImagesApp {
                     "WHERE i.latitude BETWEEN ? AND ? " +
                     "AND i.longitude BETWEEN ? AND ? " +
                     "AND t.name = ?";
-    
+
             try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
                 pstmt.setDouble(1, bottomLeftLat);
                 pstmt.setDouble(2, topRightLat);
                 pstmt.setDouble(3, bottomLeftLong);
                 pstmt.setDouble(4, topRightLong);
                 pstmt.setString(5, topicInput);
-    
+
                 ResultSet resultSet = pstmt.executeQuery();
                 return extractImagesFromResultSet(resultSet);
             } catch (SQLException e) {
@@ -209,32 +219,32 @@ public class searchImagesApp {
             return new JSONArray();
         }
     }
-    
+
     private JSONArray extractImagesFromResultSet(ResultSet resultSet) throws SQLException {
         JSONArray imagesArray = new JSONArray();
-    
+
         while (resultSet.next()) {
             int imageId = resultSet.getInt("id_ima");
             String imageIdStr = resultSet.getString("id_ima");
             double latitude = resultSet.getDouble("latitude");
             double longitude = resultSet.getDouble("longitude");
             int ownerId = resultSet.getInt("owner_id");
-    
+
             String queryTopic = "SELECT t.name " +
                     "FROM topics t " +
                     "JOIN image_topic it ON t.id_top = it.idr_top " +
                     "WHERE it.idr_ima = ?";
-    
+
             try (PreparedStatement pstmtTopic = dbConnection.prepareStatement(queryTopic)) {
                 pstmtTopic.setInt(1, imageId);
                 ResultSet resultSetTopic = pstmtTopic.executeQuery();
-    
+
                 JSONArray topicsArray = new JSONArray();
                 while (resultSetTopic.next()) {
                     String topic = resultSetTopic.getString("name");
                     topicsArray.put(topic);
                 }
-    
+
                 JSONObject imageObject = new JSONObject();
                 imageObject.put("imageId", imageIdStr);
                 imageObject.put("lat", latitude);
@@ -244,10 +254,9 @@ public class searchImagesApp {
                 imagesArray.put(imageObject);
             }
         }
-    
+
         return imagesArray;
     }
-    
 
     protected void listenToUploads() {
         try {
