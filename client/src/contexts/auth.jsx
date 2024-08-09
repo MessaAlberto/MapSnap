@@ -1,3 +1,4 @@
+import { SocketContext } from 'contexts/socket';
 import { UtilsContext } from 'contexts/utilsProvider';
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -5,7 +6,8 @@ import { useNavigate } from 'react-router-dom';
 export const authContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const { apiRoutes, appRoutes } = useContext(UtilsContext);
+  const { apiRoutes, appRoutes, fetchWithSocketId } = useContext(UtilsContext);
+  const { socketReady } = useContext(SocketContext);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
 
@@ -13,11 +15,14 @@ export function AuthProvider({ children }) {
     // Check if the token is valid on component mount
     async function checkAuth() {
       try {
-        const res = await fetch(apiRoutes.CHECK_AUTH, {
+        console.log('Make uth request:', localStorage.getItem('socketId'));
+        const res = await fetchWithSocketId(apiRoutes.CHECK_AUTH, {
           method: 'GET',
+          headers: { 'x-socket-id': localStorage.getItem('socketId') },
           credentials: 'include', // Ensure cookies are sent
         });
 
+        console.log('Auth response:', res);
         if (res.ok) {
           const data = await res.json();
           setCurrentUser(data.user);
@@ -37,8 +42,12 @@ export function AuthProvider({ children }) {
       }
     }
 
-    checkAuth();
-  }, [navigate]);
+    if (socketReady)
+      checkAuth();
+    
+    return () => {
+    };
+  }, [navigate, socketReady]);
 
 
   useEffect(() => {
@@ -51,7 +60,7 @@ export function AuthProvider({ children }) {
 
   async function login(user) {
     try {
-      const res = await fetch(apiRoutes.LOGIN, {
+      const res = await fetchWithSocketId(apiRoutes.LOGIN, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
@@ -66,7 +75,7 @@ export function AuthProvider({ children }) {
 
       const data = await res.json();
       setCurrentUser(data.user);
-      window.location.reload();
+      // window.location.reload();
       return res;
     } catch (error) {
       console.error('Error during login:', error.message);
@@ -77,7 +86,7 @@ export function AuthProvider({ children }) {
 
   async function register(user) {
     try {
-      const res = await fetch(apiRoutes.REGISTER, {
+      const res = await fetchWithSocketId(apiRoutes.REGISTER, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(user),
@@ -99,7 +108,7 @@ export function AuthProvider({ children }) {
   async function logout() {
     setCurrentUser(null);
     try {
-      const res = await fetch(apiRoutes.LOGOUT, {
+      const res = await fetchWithSocketId(apiRoutes.LOGOUT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -116,7 +125,7 @@ export function AuthProvider({ children }) {
 
   async function uniqueUsername(username) {
     try {
-      const res = await fetch(`${apiRoutes.CHECK_USERNAME}/${username}`);
+      const res = await fetchWithSocketId(`${apiRoutes.CHECK_USERNAME}/${username}`);
       if (res.status === 404) {
         return true;
       } else if (res.status === 200) {

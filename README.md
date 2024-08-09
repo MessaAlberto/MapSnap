@@ -30,11 +30,11 @@ e quinidi sul mio pc settare i firewall per accettare connessioni esterne su que
 DB mqtt
 ```sql
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
+    id_usr SERIAL PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(64) NOT NULL,
-    refresh_token TEXT NOT NULL
+    refresh_token TEXT
 );
 ```
 
@@ -42,10 +42,11 @@ DB Images
 ```sql
 -- Creazione della tabella 'images'
 CREATE TABLE images (
-    id_ima SERIAL PRIMARY KEY,     -- Identificativo univoco per ogni immagine
+    id_ima SERIAL PRIMARY KEY,        -- Identificativo univoco per ogni immagine
     latitude DECIMAL(9, 6) NOT NULL,   -- Latitudine con precisione fino a 6 decimali
     longitude DECIMAL(9, 6) NOT NULL,  -- Longitudine con precisione fino a 6 decimali
-    owner_id INT NOT NULL,          -- Identificativo dell'utente proprietario dell
+    owner_id INT NOT NULL,            -- Identificativo dell'utente proprietario dell'immagine
+    FOREIGN KEY (owner_id) REFERENCES users (id_usr) ON DELETE CASCADE  -- Chiave esterna con azione di cascata
 );
 
 -- Creazione della tabella 'topics'

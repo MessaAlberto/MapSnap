@@ -9,14 +9,14 @@ import App from './App';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   // <React.StrictMode>
-    <BrowserRouter>
+  <BrowserRouter>
+    <SocketProvider>
       <UtilsProvider>
         <AuthProvider>
-          <SocketProvider>
-            <App />
-          </SocketProvider>
+          <App />
         </AuthProvider>
       </UtilsProvider>
-    </BrowserRouter>,
+    </SocketProvider>
+  </BrowserRouter>,
   // </React.StrictMode>,
 )

@@ -82,7 +82,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
 });
 
 router.get('/my', async (req, res) => {
-  const socketId = req.headers['socket-id'];
+  const socketId = req.headers['x-socket-id'];
 
   if (!socketId) {
     return res.status(400).send('Socket ID is required');

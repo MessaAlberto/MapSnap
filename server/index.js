@@ -3,7 +3,6 @@ const http = require('http');
 const app = require('./app');
 const server = http.createServer(app);
 const io = require('socket.io')(server);
-const { db } = require('./database');
 const { setupMQTTConnection } = require('./mqttManager');
 const { setupSocketIO } = require('./socketManager');
 
@@ -12,10 +11,6 @@ async function startServer() {
   try {
     // Test S3 connection
     await require('./s3Manager').testS3Connection();
-
-    // Connect to the database
-    const data = await db.query('SELECT NOW()');
-    console.log('Connected to database. Current timestamp:', data[0].now);
 
     // Setup MQTT server connection
     const client = await setupMQTTConnection();

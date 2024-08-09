@@ -8,7 +8,7 @@ export function setupSocketConnection() {
   socket = io(EXPRESS_SERVER_API, { transports: ['websocket'] });
 
   socket.on('connect', () => {
-    console.log('Connected to Express server socket');
+    console.log('Connected to Express server socket: ', socket.id);
   });
 
   Object.keys(eventHandlers).forEach((event) => {
@@ -20,6 +20,7 @@ export function setupSocketConnection() {
 
 export function disconnectSocket() {
   if (socket) {
+    console.log('Disconnecting socket');
     socket.disconnect();
     socket = null;
   }
@@ -28,7 +29,7 @@ export function disconnectSocket() {
 
 export function registerEventHandler(event, handler) {
   if (!socket) {
-    console.error('Socket not initialized. Call setupSocketConnection first.');
+    console.error('registerEventHandler: Socket not initialized. Call setupSocketConnection first.');
     return;
   }
   
@@ -40,7 +41,7 @@ export function registerEventHandler(event, handler) {
 
 export function unregisterEventHandler(event) {
   if (!socket) {
-    console.error('Socket not initialized. Call setupSocketConnection first.');
+    console.error('unregisterEventHandler: Socket not initialized. Call setupSocketConnection first.');
     return;
   }
 
@@ -55,6 +56,6 @@ export function MapSearchRequest(message) {
   if (socket) {
     socket.emit('map_search_request', { message });
   } else {
-    console.error('Socket not initialized. Call setupSocketConnection first.');
+    console.error('MapSearchRequest: Socket not initialized. Call setupSocketConnection first.');
   }
 }

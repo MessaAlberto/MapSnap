@@ -35,7 +35,8 @@ const Login = () => {
     try {
       setError(null);
       const res = await login({ username, password });
-      console.log('res: ', res);
+      console.log('res per login: ', res);
+      console.log('res.status per login: ', res.status);
       if (res.status === 401) {
         setError('Invalid credentials. Please try again.');
         return;

@@ -5,12 +5,15 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
+import java.util.function.Consumer;
 
 import org.eclipse.paho.client.mqttv3.IMqttClient;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -45,7 +48,6 @@ public class searchImagesApp {
     protected void loadProperties() throws IOException {
         properties = new Properties();
         properties.load(searchImagesApp.class.getClassLoader().getResourceAsStream("config.properties"));
-
     }
 
     protected void connectToDatabase() {
@@ -98,7 +100,13 @@ public class searchImagesApp {
                                                 + receivedMessage);
                                 executorService.execute(() -> processFindIma(socketId, receivedMessage));
                             });
-                            System.out.println("Subscribed to " + socketId + "/find_images");
+                            mqttClient.subscribe(socketId + "/user", (topicUser, userMessage) -> {
+                                String receivedMessage = new String(userMessage.getPayload());
+                                System.out.println(
+                                        "Received message on /user from user " + socketId + ": " + receivedMessage);
+                                executorService.execute(() -> processRequest(socketId, receivedMessage));
+
+                            });
                         } catch (MqttException e) {
                             e.printStackTrace();
                         }
@@ -110,7 +118,6 @@ public class searchImagesApp {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                // print socketIdSet
                 System.out.println("socketIdSet: " + socketIdSet);
             });
             mqttClient.subscribe("userDisconnected", (topic, message) -> {
@@ -122,15 +129,14 @@ public class searchImagesApp {
                     if (socketIdSet.remove(socketId)) {
                         System.out.println("User disconnected: " + socketId);
                         mqttClient.unsubscribe(socketId + "/find_images");
-                        System.out.println("Unsubscribed from " + socketId + "/find_images" + " for user " + socketId);
+                        mqttClient.unsubscribe(socketId + "/user");
+                        System.out.println("Unsubscribed from " + socketId + "/find_images and /user for user " + socketId);
                     } else {
                         System.out.println("User " + socketId + " not found in socketIdSet");
                     }
-
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                // print socketIdSet
                 System.out.println("socketIdSet: " + socketIdSet);
             });
         } catch (MqttException e) {
@@ -166,9 +172,193 @@ public class searchImagesApp {
         }
     }
 
+    private void processRequest(String socketId, String message) {
+        try {
+            JSONObject jsonMessage = new JSONObject(message);
+            String requestType = jsonMessage.getString("req");
+            String requestId = jsonMessage.getString("requestId");
+
+            Map<String, Consumer<JSONObject>> requestHandlers = Map.of(
+                    "getUsernameById", msg -> processGetUsernameById(socketId, msg, requestId),
+                    "getUserByUsername", msg -> processGetUserByUsername(socketId, msg, requestId),
+                    "updateRefreshToken", msg -> processUpdateRefreshToken(socketId, msg, requestId),
+                    "getUserByEmail", msg -> processGetUserByEmail(socketId, msg, requestId),
+                    "registerUser", msg -> processRegisterUser(socketId, msg, requestId),
+                    "getUserById", msg -> processGetUserById(socketId, msg, requestId));
+
+            Consumer<JSONObject> handler = requestHandlers.get(requestType);
+            if (handler != null) {
+                handler.accept(jsonMessage);
+            } else {
+                System.err.println("Unknown request type: " + requestType);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void processGetUsernameById(String socketId, JSONObject jsonMessage, String requestId) {
+        String query = "SELECT username FROM users WHERE id_usr = ?";
+        executeQueryWithResult(socketId, requestId, jsonMessage, query, jsonMessage.getInt("id_usr"));
+    }
+    
+    private void processGetUserByUsername(String socketId, JSONObject jsonMessage, String requestId) {
+        String query = "SELECT * FROM users WHERE username = ?";
+        executeQueryWithResult(socketId, requestId, jsonMessage, query, jsonMessage.getString("username"));
+    }
+    
+    private void processUpdateRefreshToken(String socketId, JSONObject jsonMessage, String requestId) {
+        System.out.println("\nmessage: " + jsonMessage);
+        String query = "UPDATE users SET refresh_token = ? WHERE id_usr = ?";
+        executeUpdate(socketId, requestId, jsonMessage, query, pstmt -> {
+            try {
+                pstmt.setString(1, jsonMessage.getString("refreshToken"));
+                pstmt.setInt(2, jsonMessage.getInt("id_usr"));
+            } catch (JSONException | SQLException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+    
+    private void processGetUserByEmail(String socketId, JSONObject jsonMessage, String requestId) {
+        String query = "SELECT id_usr FROM users WHERE email = ?";
+        executeQueryWithResult(socketId, requestId, jsonMessage, query, jsonMessage.getString("email"));
+    }
+    
+    private void processRegisterUser(String socketId, JSONObject jsonMessage, String requestId) {
+        String query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
+        try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
+            pstmt.setString(1, jsonMessage.getString("username"));
+            pstmt.setString(2, jsonMessage.getString("email"));
+            pstmt.setString(3, jsonMessage.getString("password"));
+            int affectedRows = pstmt.executeUpdate();
+            
+            JSONObject response = new JSONObject();
+            response.put("requestId", requestId);
+            
+            if (affectedRows > 0) {
+                response.put("status", "success");
+            } else {
+                System.err.println("Failed to register user: " + jsonMessage.getString("username"));
+                response.put("status", "error");
+                response.put("message", "Failed to register user.");
+            }
+            
+            publishMessage(socketId + "/user/response", response);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            JSONObject response = new JSONObject();
+            response.put("status", "error");
+            response.put("requestId", requestId);
+            
+            // Check if the error is due to a unique constraint violation
+            if (e.getSQLState().equals("23505")) { // PostgreSQL specific SQL state for unique violation
+                response.put("message", "Email already exists.");
+            } else {
+                response.put("message", "An unexpected error occurred.");
+            }
+            
+            try {
+                publishMessage(socketId + "/user/response", response);
+            } catch (MqttException mqttException) {
+                mqttException.printStackTrace();
+            }
+        } catch (MqttException mqttException) {
+            mqttException.printStackTrace();
+            JSONObject response = new JSONObject();
+            response.put("status", "error");
+            response.put("requestId", requestId);
+            response.put("message", "An error occurred while sending the response.");
+            try {
+                publishMessage(socketId + "/user/response", response);
+            } catch (MqttException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+    
+
+    private void processGetUserById(String socketId, JSONObject jsonMessage, String requestId) {
+        String query = "SELECT username, email, refresh_token FROM users WHERE id_usr = ?";
+        try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
+            pstmt.setInt(1, jsonMessage.getInt("id_usr"));
+            ResultSet resultSet = pstmt.executeQuery();
+            if (resultSet.next()) {
+                JSONObject response = new JSONObject();
+                response.put("username", resultSet.getString("username"));
+                response.put("email", resultSet.getString("email"));
+                response.put("refreshToken", resultSet.getString("refresh_token"));
+                response.put("requestId", requestId);
+                publishMessage(socketId + "/user/response", response);
+            } else {
+                System.err.println("No user found for id: " + jsonMessage.getInt("id_usr"));
+            }
+        } catch (SQLException | MqttException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void publishMessage(String topic, JSONObject response) throws MqttException {
+        mqttClient.publish(topic, new MqttMessage(response.toString().getBytes()));
+    }
+
+    private void executeUpdate(String socketId, String requestId, JSONObject jsonMessage, String query,
+            Consumer<PreparedStatement> parameterSetter) {
+        try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
+            parameterSetter.accept(pstmt);
+            pstmt.executeUpdate();
+            JSONObject response = new JSONObject();
+            response.put("requestId", requestId);
+            response.put("status", "success");
+            publishMessage(socketId + "/user/response", response);
+        } catch (SQLException | MqttException e) {
+            e.printStackTrace();
+            try {
+                JSONObject response = new JSONObject();
+                response.put("requestId", requestId);
+                response.put("status", "error");
+                publishMessage(socketId + "/user/response", response);
+            } catch (JSONException | MqttException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+
+    private void executeQueryWithResult(String socketId, String requestId, JSONObject jsonMessage, String query, Object parameterValue) {
+    try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
+        pstmt.setObject(1, parameterValue);
+        ResultSet resultSet = pstmt.executeQuery();
+        if (resultSet.next()) {
+            JSONObject response = new JSONObject();
+            ResultSetMetaData metaData = resultSet.getMetaData();
+            int columnCount = metaData.getColumnCount();
+            for (int i = 1; i <= columnCount; i++) {
+                String columnName = metaData.getColumnName(i);
+                Object columnValue = resultSet.getObject(i);
+                response.put(columnName, columnValue);
+            }
+            response.put("requestId", requestId);
+            publishMessage(socketId + "/user/response", response);
+            System.out.println("Sending response to user " + socketId + ": " + response);
+        } else {
+            System.err.println("No result found for query: " + query);
+            JSONArray emptyArray = new JSONArray();
+            JSONObject response = new JSONObject();
+            response.put("requestId", requestId);
+            response.put("status", "not_found");
+            response.put("data", emptyArray);
+            publishMessage(socketId + "/user/response", response);
+        }
+    } catch (SQLException | MqttException e) {
+        e.printStackTrace();
+    }
+}
+
+
     private JSONArray findImagesByUserId(Integer userId) {
-        String query = "SELECT i.id_ima, i.latitude, i.longitude, i.owner_id " +
+        String query = "SELECT i.id_ima, i.latitude, i.longitude, u.username " +
                 "FROM images i " +
+                "JOIN users u ON i.owner_id = u.id_usr " +
                 "WHERE i.owner_id = ?";
 
         try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
@@ -193,10 +383,11 @@ public class searchImagesApp {
 
             String topicInput = jsonMessage.getString("topic");
 
-            String query = "SELECT i.id_ima, i.latitude, i.longitude, i.owner_id " +
+            String query = "SELECT i.id_ima, i.latitude, i.longitude, u.username " +
                     "FROM images i " +
                     "JOIN image_topic it ON i.id_ima = it.idr_ima " +
                     "JOIN topics t ON it.idr_top = t.id_top " +
+                    "JOIN users u ON i.owner_id = u.id_usr " +
                     "WHERE i.latitude BETWEEN ? AND ? " +
                     "AND i.longitude BETWEEN ? AND ? " +
                     "AND t.name = ?";
@@ -228,7 +419,7 @@ public class searchImagesApp {
             String imageIdStr = resultSet.getString("id_ima");
             double latitude = resultSet.getDouble("latitude");
             double longitude = resultSet.getDouble("longitude");
-            int ownerId = resultSet.getInt("owner_id");
+            String username = resultSet.getString("username");
 
             String queryTopic = "SELECT t.name " +
                     "FROM topics t " +
@@ -249,7 +440,7 @@ public class searchImagesApp {
                 imageObject.put("imageId", imageIdStr);
                 imageObject.put("lat", latitude);
                 imageObject.put("lon", longitude);
-                imageObject.put("ownerId", ownerId);
+                imageObject.put("owner_username", username);
                 imageObject.put("topics", topicsArray);
                 imagesArray.put(imageObject);
             }
@@ -280,7 +471,7 @@ public class searchImagesApp {
                         response.put("imageId", uploadResult.imageId);
                     }
 
-                    mqttClient.publish("uploadConfirm", new MqttMessage(response.toString().getBytes()));
+                    publishMessage("uploadConfirm", response);
 
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -419,3 +610,4 @@ public class searchImagesApp {
         new searchImagesApp();
     }
 }
+

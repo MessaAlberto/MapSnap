@@ -1,14 +1,16 @@
 const router = require('express').Router();
-const { getUserByUsername } = require('../../database');
+const { mqttRequest } = require('../../mqttManager');
 
 
 router.get('/username/:username', async (req, res) => {
   const { username } = req.params;
+  const socketId = req.headers['x-socket-id'];
 
   try {
-    const result = await getUserByUsername(username);
+    // const result = await getUserByUsername(username);
+    const result = await mqttRequest(`${socketId}/user`, { req: 'getUserByUsername', username });
 
-    if (result && result.length > 0) {
+    if (result && result.id_usr) {
       res.status(200).send('Username exists');
     } else {
       res.status(404).send('Username does not exist');

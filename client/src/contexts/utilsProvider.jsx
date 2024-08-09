@@ -3,6 +3,18 @@ import { API_ROUTES, APP_ROUTES } from '../../constants';
 
 export const UtilsContext = createContext();
 
+export async function fetchWithSocketId(url, options = {}) {
+  const socketId = localStorage.getItem('socketId');
+  const headers = {
+    ...options.headers,
+    'x-socket-id': socketId || '',
+  };
+
+  const response = await fetch(url, { ...options, headers });
+  return response;
+}
+
+
 export const UtilsProvider = ({ children }) => {
   const [searchTopic, setSearchTopic] = useState('');
   const [searchPlace, setSearchPlace] = useState('');
@@ -14,7 +26,8 @@ export const UtilsProvider = ({ children }) => {
       searchTopic,
       setSearchTopic,
       searchPlace,
-      setSearchPlace
+      setSearchPlace,
+      fetchWithSocketId,
     }}>
       {children}
     </UtilsContext.Provider>

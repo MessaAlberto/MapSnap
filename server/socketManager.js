@@ -1,5 +1,4 @@
 const { getFoldersContentsFromS3 } = require('./s3Manager');
-const { getUsernameById } = require('./database');
 
 const socketClientMap = {};
 let io = null;
@@ -11,12 +10,13 @@ function setupSocketIO(ioTosetUP, mqttClientToSetUP) {
   io.on('connection', (socket) => {
     console.log('Socket connected:', socket.id);
 
-    mqttClient.publish('userConnected', JSON.stringify({ id: socket.id }));
-    mqttClient.subscribe(`${socket.id}/images_data`);
-
     socketClientMap[socket.id] = { images: {} };
     console.log('Active socket IDs:', Object.keys(socketClientMap));
 
+    mqttClient.publish('userConnected', JSON.stringify({ id: socket.id }));
+    mqttClient.subscribe(`${socket.id}/images_data`);
+    mqttClient.subscribe(`${socket.id}/user/response`);
+    
     socket.on('map_search_request', async (data) => {
       findImagesOnMap(socket, data);
     });
@@ -26,6 +26,7 @@ function setupSocketIO(ioTosetUP, mqttClientToSetUP) {
 
       mqttClient.publish('userDisconnected', JSON.stringify({ id: socket.id }));
       mqttClient.unsubscribe(socket.id + '/images_data');
+      mqttClient.unsubscribe(socket.id + '/user');
       delete socketClientMap[socket.id];
       console.log('Active socket IDs:', Object.keys(socketClientMap));
     });
@@ -111,11 +112,10 @@ async function handleImageData(topic, message) {
     imageDataList.forEach(data => {
       const cachedImage = cachedImages[data.imageId];
       if (cachedImage) {
-        if (cachedImage.owner_username && cachedImage.imageBase64) {
+        if (cachedImage.imageBase64) {
           completeCachedData.push({
             ...data,
-            imageBase64: cachedImage.imageBase64,
-            owner_username: cachedImage.owner_username
+            imageBase64: cachedImage.imageBase64
           });
         }
       } else {
@@ -137,20 +137,6 @@ async function handleImageData(topic, message) {
     }
 
     if (idsToFetch.length > 0) {
-      const [userPromises] = await Promise.all([
-        Promise.all(idsToFetch.map(async (imageId) => {
-          const data = imageDataList.find(data => data.imageId === imageId);
-          if (!cachedImages[imageId]?.owner_username) {
-            const owner_username = await getUsernameById(data.ownerId);
-            cachedImages[imageId] = {
-              ...cachedImages[imageId],
-              owner_username
-            };
-          }
-          return data;
-        }))
-      ]);
-
       await getFoldersContentsFromS3(idsToFetch, (imageData) => {
         cachedImages[imageData.id] = {
           ...cachedImages[imageData.id],
@@ -161,8 +147,7 @@ async function handleImageData(topic, message) {
           .filter(data => data.imageId === imageData.id)
           .map(data => ({
             ...data,
-            imageBase64: imageData.imageBase64,
-            owner_username: cachedImages[imageData.id]?.owner_username || null
+            imageBase64: imageData.imageBase64
           }));
 
         if (data.searchedForMap) {

@@ -1,7 +1,7 @@
 import AddPhotoButton from 'components/AddPhotoButton';
 import Popup from 'components/Popup';
 import { authContext } from 'contexts/auth';
-import SocketContext from 'contexts/socket';
+import { SocketContext } from 'contexts/socket';
 import { UtilsContext } from 'contexts/utilsProvider';
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -9,7 +9,7 @@ import { registerEventHandler, unregisterEventHandler } from 'socketManager';
 import 'style/pages/MyPhoto.scss';
 
 const MyPhoto = () => {
-  const { apiRoutes, appRoutes } = useContext(UtilsContext);
+  const { apiRoutes, appRoutes, fetchWithSocketId } = useContext(UtilsContext);
   const { currentUser } = useContext(authContext);
   const socket = useContext(SocketContext);
   const [photos, setPhotos] = useState([]);
@@ -20,11 +20,10 @@ const MyPhoto = () => {
   const fetchPhotos = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(apiRoutes.MY_PHOTO, {
+      const response = await fetchWithSocketId(apiRoutes.MY_PHOTO, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'Socket-ID': socket.id || '',
         },
       });
 
@@ -40,8 +39,6 @@ const MyPhoto = () => {
 
 
   useEffect(() => {
-    console.log('MyPhoto component mounted');
-
     const handleReceivePhotos = (data) => {
       console.log('Received photos in MyPhoto:', data);
 
@@ -66,7 +63,6 @@ const MyPhoto = () => {
 
       return () => {
         unregisterEventHandler('images_data');
-        console.log('MyPhoto component unmounted');
       };
     }
   }, []);
@@ -137,4 +133,4 @@ const MyPhoto = () => {
 };
 
 
-  export default MyPhoto;
+export default MyPhoto;

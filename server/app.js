@@ -13,9 +13,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// Serve files statici dalla cartella 'client/dist'
-app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
-
 const authURL = require('./app/authentication/auth');
 const userURL = require('./app/entities/user');
 const photoURL = require('./app/entities/photo');
@@ -23,6 +20,9 @@ const photoURL = require('./app/entities/photo');
 app.use('/auth', authURL);
 app.use('/user', userURL);
 app.use('/photo', authenticateToken, photoURL);
+
+// Uncomment the following lines to serve frontend as static files
+app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
 
 // Default route
 app.get('*', (req, res) => {

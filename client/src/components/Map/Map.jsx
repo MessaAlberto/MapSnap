@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AddPhotoButton from 'components/AddPhotoButton';
 import Popup from 'components/Popup';
 import { authContext } from 'contexts/auth';
-import SocketContext from 'contexts/socket';
+import { SocketContext } from 'contexts/socket';
 import { UtilsContext } from 'contexts/utilsProvider';
 import { debounce } from 'lodash';
 import Map from 'ol/Map';

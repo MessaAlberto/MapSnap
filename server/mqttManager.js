@@ -4,6 +4,7 @@ const { handleImageData } = require('./socketManager');
 const { v4: uuidv4 } = require('uuid');
 
 let mqttClient;
+const pendingRequests = new Map();
 let uploadStatusMap = new Map();
 let deleteStatusMap = new Map();
 
@@ -22,7 +23,7 @@ function setupMQTTConnection() {
   });
 
   mqttClient.on('message', async (topic, message) => {
-    console.log(`MQTT message received on topic: ${topic}`);
+    console.log(`MQTT message received on topic: ${topic}`, message.toString());
 
     if (topic === 'uploadConfirm') {
       handleUploadConfirm(message);
@@ -32,6 +33,15 @@ function setupMQTTConnection() {
 
     if (topic.includes('/images_data')) {
       handleImageData(topic, message);
+    }
+
+    const parsedMessage = JSON.parse(message.toString());
+
+    if (topic.includes('/user/response') && pendingRequests.has(parsedMessage.requestId)) {
+      const { resolve, reject, timer } = pendingRequests.get(parsedMessage.requestId);
+      clearTimeout(timer);
+      resolve(parsedMessage);
+      pendingRequests.delete(parsedMessage.requestId);
     }
   });
 
@@ -78,6 +88,8 @@ function handleDeleteConfirm(message) {
 
 function publish(topic, payload) {
   return new Promise((resolve, reject) => {
+    console.log(`Publishing to topic: ${topic}`);
+    console.log('Payload:', payload);
     mqttClient.publish(topic, JSON.stringify(payload), (err) => {
       if (err) {
         return reject('Error publishing to MQTT');
@@ -87,6 +99,27 @@ function publish(topic, payload) {
   });
 }
 
+function mqttRequest(topic, message, timeout = 5000) {
+  return new Promise((resolve, reject) => {
+    const requestId = uuidv4();
+    message.requestId = requestId;
+
+    const timer = setTimeout(() => {
+      if (pendingRequests.has(requestId)) {
+        pendingRequests.delete(requestId);
+        reject(new Error('Request timeout'));
+      }
+    }, timeout);
+
+    pendingRequests.set(requestId, { resolve, reject, timer });
+
+    publish(topic, message).catch(err => {
+      clearTimeout(timer);
+      pendingRequests.delete(requestId);
+      reject(err);
+    });
+  });
+}
 
 function uploadPhotoMQTT(payload) {
   return new Promise((resolve, reject) => {
@@ -138,4 +171,6 @@ module.exports = {
   uploadPhotoMQTT,
   setupMQTTConnection,
   removePhotoFromMQTT,
+  publish,
+  mqttRequest,
 };
