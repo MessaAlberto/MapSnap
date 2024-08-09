@@ -19,7 +19,11 @@ su express, assegnare l'indirizzo pubblico del pc fisso al server express. cosi 
 Dopo diche devo configurare il mio router di casa in modo che possa indirizzare le connessioni ricevute sulla porta 1883 e 9001 all'indirizzo privato del mio pc. 
 e quinidi sul mio pc settare i firewall per accettare connessioni esterne su quelle porte?
 
+ scp -i "C:\Users\Alberto Messa\Downloads\mapsnap-webapp.pem" -r "C:\Users\Alberto Messa\Desktop\MapSnap" ubuntu@ec2-3-68-189-107.eu-central-1.compute.amazonaws.com:/home/ubuntu/
 
+ rsync -avz \
+-e "ssh -i "C:/Users/Alberto Messa/Downloads/mapsnap-webapp.pem"" \
+"C:/Users/Alberto Messa/Desktop/MapSnap/client/dist" ubuntu@ec2-3-68-189-107.eu-central-1.compute.amazonaws.com:/home/ubuntu/
 
 
 
