@@ -7,6 +7,7 @@ let mqttClient = null;
 function setupSocketIO(ioTosetUP, mqttClientToSetUP) {
   io = ioTosetUP;
   mqttClient = mqttClientToSetUP;
+
   io.on('connection', (socket) => {
     console.log('Socket connected:', socket.id);
 

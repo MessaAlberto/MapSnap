@@ -9,9 +9,8 @@ $message-display-duration: 0.5s;
 #map {
   position: absolute;
   top: 0;
-  left: 3.5rem;
-  width: calc(100% - 3.5rem);
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   transition: width 0.3s ease, left 0.3s ease;
   z-index: 0;
 }
@@ -152,4 +151,10 @@ $message-display-duration: 0.5s;
   border: 1px solid #007bff;
   transition: opacity $message-display-duration ease-in-out;
   pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .ol-zoom {
+    display: none;
+  }
 }

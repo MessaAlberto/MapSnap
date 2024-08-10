@@ -10,7 +10,6 @@ const authenticateToken = async (req, res, next) => {
   const accessToken = req.cookies.accessToken;
   const refreshToken = req.cookies.refreshToken;
   const socketId = req.headers['x-socket-id'];
-  console.log('Socket ID middleware:', socketId);
 
   // Both tokens are missing
   if (!accessToken && !refreshToken) {

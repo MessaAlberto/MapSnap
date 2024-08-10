@@ -62,3 +62,13 @@
     }
   }
 }
+
+@media (max-width: 768px) {
+  .popup-content {
+    width: 90%; // Puoi anche adattare la larghezza per dispositivi mobili
+  }
+
+  button {
+    font-size: 0.875rem; // Riduci la dimensione del font per dispositivi mobili
+  }
+}

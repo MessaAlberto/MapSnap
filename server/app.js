@@ -22,12 +22,12 @@ app.use('/user', userURL);
 app.use('/photo', authenticateToken, photoURL);
 
 // Uncomment the following lines to serve frontend as static files
-app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
+// app.use(express.static(path.join(__dirname, '..', 'client', 'dist')));
 
-// Default route
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
-});
+// // Default route
+// app.get('*', (req, res) => {
+//   res.sendFile(path.join(__dirname, '..', 'client', 'dist', 'index.html'));
+// });
 
 // default route
 app.use((req, res) => {
