@@ -98,6 +98,10 @@ const MapComponent = () => {
     return () => {
       map.setTarget(null);
       mapRef.current = null;
+      searchTopicRef.current = '';
+      setIsSearching(false);
+      setPopupData(null);
+      setNoPhotosMessage('');
     };
   }, []);
 
@@ -123,7 +127,7 @@ const MapComponent = () => {
     if (Array.isArray(data)) {
       if (data.length === 0) {
         setNoPhotosMessage('No photos found');
-        setTimeout(() => setNoPhotosMessage(''), 500);
+        setTimeout(() => setNoPhotosMessage(''), 1000);
         return;
       }
 
