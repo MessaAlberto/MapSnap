@@ -7,13 +7,20 @@ const upload = multer({ storage });
 const { uploadPhotoMQTT, removePhotoFromMQTT, getImaByOwnerId } = require('../../mqttManager');
 const { socketClientMap } = require('../../socketManager');
 const { uploadPhotoToS3, deletePhotoFromS3 } = require('../../s3Manager');
+const { verifyRecaptcha } = require('../authentication/recaptcha');
 
 router.post('/', upload.single('photo'), async (req, res) => {
   const photo = req.file;
   const hashtags = JSON.parse(req.body.hashtags);
   const latitude = req.body.latitude;
   const longitude = req.body.longitude;
+  const captcha = req.body.captcha;
   const userId = req.user._id;
+
+  const isCaptchaValid = await verifyRecaptcha(captcha);
+  if (!isCaptchaValid) {
+    return res.status(400).send('CAPTCHA verification failed');
+  }
 
   if (!photo || !hashtags || hashtags.length === 0) {
     return res.status(400).send('Invalid photo or hashtags');
@@ -25,6 +32,8 @@ router.post('/', upload.single('photo'), async (req, res) => {
   }
 
   hashtags.forEach(hashtag => {
+    hashtag = hashtag.trim();
+    hashtag = hashtag.toLowerCase();
     if (hashtag.length > 15) {
       return res.status(400).send('Invalid photo or hashtags');
     }

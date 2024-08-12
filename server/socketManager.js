@@ -128,7 +128,9 @@ async function handleImageData(topic, message) {
       console.log('Sending cached images:', completeCachedData.length);
       if (data.searchedForMap) {
         const lastTopic = socketClientMap[socketId].lastTopic;
-        const filteredCachedData = completeCachedData.filter(data => data.topics.includes(lastTopic));
+        const filteredCachedData = completeCachedData.filter(data => 
+          data.topics.some(topic => topic.includes(lastTopic))
+        );
         io.to(socketId).emit('map_images', filteredCachedData);
         console.log('imagesId:', filteredCachedData.map(data => data = data.imageId));
       } else {
@@ -153,7 +155,9 @@ async function handleImageData(topic, message) {
 
         if (data.searchedForMap) {
           const lastTopic = socketClientMap[socketId].lastTopic;
-          const filteredData = updatedData.filter(data => data.topics.includes(lastTopic));
+          const filteredData = updatedData.filter(data => 
+            data.topics.some(topic => topic.includes(lastTopic))
+          );
           io.to(socketId).emit(emitEvent, filteredData);
           // console imageId of sended images
           console.log('imagesId filtered:', filteredData.map(data => data = data.imageId));
@@ -171,7 +175,8 @@ async function handleImageData(topic, message) {
         // const emitEvent = data.searchedForMap ? 'map_images' : 'images_data';
         // if (data.searchedForMap) {
         //   const lastTopic = socketClientMap[socketId].lastTopic;
-        //   const filteredData = combinedData.filter(data => data.topics.includes(lastTopic));
+        //   const filteredData = combinedData.filter(data =>
+        //     data.topics.some(topic => topic.includes(lastTopic))
         //   io.to(socketId).emit(emitEvent, filteredData);
         // } else {
         //   io.to(socketId).emit(emitEvent, combinedData);

@@ -19,19 +19,17 @@ const authenticateToken = async (req, res, next) => {
   const verifyRefreshTokenAndUpdateAccessToken = async () => {
     try {
       const decodedRefreshToken = jwt.verify(refreshToken, secretRefresh);
-      console.log('Decoded:', decodedRefreshToken);
       // const user = await getUserById(decodedRefreshToken._id);
       const user = await mqttRequest(`${socketId}/user`, { req: 'getUserById', id_usr: decodedRefreshToken._id });
 
-      console.log('Usesssr:', user);
-      if (!user || user.refresh_token !== refreshToken) {
+      if (!user || user.refreshToken !== refreshToken) {
         return res.status(403).send('Invalid refresh token');
       }
 
-      const newAccessToken = jwt.sign({ _id: user.id }, secretToken, { expiresIn: expireToken });
+      const newAccessToken = jwt.sign({ _id: decodedRefreshToken._id }, secretToken, { expiresIn: expireToken });
       res.cookie('accessToken', newAccessToken, { httpOnly: true, secure: true, maxAge: ms(expireToken) });
 
-      req.user = { _id: user.id_usr };
+      req.user = { _id: decodedRefreshToken._id };
       next();
     } catch (err) {
       return res.status(403).send('Invalid refresdddddh token');
@@ -45,6 +43,7 @@ const authenticateToken = async (req, res, next) => {
 
   // Access token is present
   try {
+    console.log('Access token:', accessToken);
     // Access token is valid
     const user = jwt.verify(accessToken, secretToken);
     req.user = user;
