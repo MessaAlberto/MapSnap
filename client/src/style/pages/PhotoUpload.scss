@@ -12,6 +12,12 @@
     width: 100%;
     max-width: 400px;
 
+    .captcha-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+    }
+
     .dropzone {
       border: 0.125rem dashed #cccccc;
       border-radius: 0.25rem;

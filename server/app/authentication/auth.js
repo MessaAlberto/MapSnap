@@ -7,6 +7,7 @@ const secretToken = process.env.JWT_SECRET_TOKEN;
 const secretRefresh = process.env.JWT_SECRET_REFRESH;
 const expireToken = process.env.JWT_EXPIRE_TOKEN;
 const expireRefresh = process.env.JWT_EXPIRE_REFRESH;
+const { verifyRecaptcha } = require('./recaptcha');
 const { authenticateToken } = require('../middleware');
 const { mqttRequest } = require('../../mqttManager');
 
@@ -14,13 +15,12 @@ const { mqttRequest } = require('../../mqttManager');
 router.get('/', authenticateToken, async (req, res) => {
   const userId = req.user._id;
   const socketId = req.headers['x-socket-id'];
-  console.log('socketId:', socketId);
 
   try {
     // const user = await db.getUserById(userId);
     const mqttResponse = await mqttRequest(`${socketId}/user`, { req: 'getUsernameById', id_usr: userId });
     if (mqttResponse.username) {
-      res.status(200).json({ user: { id: userId, username: mqttResponse.username } });
+      res.status(200).json({ user: { id_usr: userId, username: mqttResponse.username } });
     } else {
       res.status(401).json({ error: 'Invalid token' });
     }
@@ -31,10 +31,15 @@ router.get('/', authenticateToken, async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, captcha } = req.body;
   const socketId = req.headers['x-socket-id'];
 
   try {
+    const isCaptchaValid = await verifyRecaptcha(captcha);
+    if (!isCaptchaValid) {
+      return res.status(400).send('CAPTCHA verification failed');
+    }
+
     // const user = await db.getUserByUsername(username);
     const user = await mqttRequest(`${socketId}/user`, { req: 'getUserByUsername', username });
     console.log('User:', user);
@@ -72,8 +77,13 @@ router.post('/logout', async (req, res) => {
 
 
 router.post('/register', async (req, res) => {
-  const { username, email, password } = req.body;
+  const { username, email, password, captcha } = req.body;
   const socketId = req.headers['x-socket-id'];
+
+  const isCaptchaValid = await verifyRecaptcha(captcha);
+  if (!isCaptchaValid) {
+    return res.status(400).send('CAPTCHA verification failed');
+  }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {

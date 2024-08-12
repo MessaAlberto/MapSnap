@@ -1,7 +1,10 @@
+
 import AuthForm from 'components/AuthForm';
+import { CAPTCHA_SITE_KEY } from 'constants';
 import { authContext } from 'contexts/auth';
 import { UtilsContext } from 'contexts/utilsProvider';
 import React, { useContext, useEffect, useState } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { useLocation } from 'react-router-dom';
 import 'style/pages/AuthPage.scss';
 
@@ -12,6 +15,7 @@ const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
+  const [captchaValue, setCaptchaValue] = useState(null);
 
   const location = useLocation();
   const query = new URLSearchParams(location.search);
@@ -34,7 +38,11 @@ const Login = () => {
     event.preventDefault();
     try {
       setError(null);
-      const res = await login({ username, password });
+      if (!captchaValue) {
+        setError('Please complete the CAPTCHA.');
+        return;
+      }
+      const res = await login({ username, password, captcha: captchaValue });
       console.log('res per login: ', res);
       console.log('res.status per login: ', res.status);
       if (res.status === 401) {
@@ -44,6 +52,10 @@ const Login = () => {
     } catch (error) {
       setError('Error logging in. Please try again later.');
     }
+  };
+
+  const handleCaptchaChange = (value) => {
+    setCaptchaValue(value);
   };
 
   return (
@@ -75,6 +87,7 @@ const Login = () => {
       actionText="Don't have an account?"
       actionLink={`${appRoutes.SIGNUP}`}
       actionLinkText='Sign up here'
+      captcha={<ReCAPTCHA sitekey={CAPTCHA_SITE_KEY} size="compact" onChange={handleCaptchaChange} />}
     />
   );
 };

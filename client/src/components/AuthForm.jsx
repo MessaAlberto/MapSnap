@@ -13,6 +13,7 @@ const AuthForm = ({
   actionLink,
   actionLinkText,
   actionOnClick,
+  captcha,
 }) => {
   const { appRoutes } = React.useContext(UtilsContext);
   const navigate = useNavigate();
@@ -44,6 +45,8 @@ const AuthForm = ({
         ))}
 
         {error && <p className='error-message'>{error}</p>}
+
+        {captcha && <div className='captcha-container'>{captcha}</div>}
 
         <button type='submit'>{buttonText}</button>
       </form>

@@ -1,7 +1,9 @@
 import PhotoUpload from 'components/DragAndDrop';
 import LocationConsent from 'components/LocationConsent';
+import { CAPTCHA_SITE_KEY } from 'constants';
 import { UtilsContext } from 'contexts/utilsProvider';
 import React, { useMemo, useState } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { useLocation, useNavigate } from 'react-router-dom';
 import 'style/pages/PhotoUpload.scss';
 
@@ -17,6 +19,8 @@ const PhotoUploadPage = () => {
   const [loading, setLoading] = useState(false);
   const [locationConsent, setLocationConsent] = useState(false);
   const [showPopup, setShowPopup] = useState(false);
+  const [captchaValue, setCaptchaValue] = useState(null);
+
   const hashtagList = useMemo(() => hashtags.map((hashtag) => hashtag.slice(1)), [hashtags]);
 
   const handlePhotoChange = (file) => {
@@ -72,6 +76,11 @@ const PhotoUploadPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!captchaValue) {
+      alert('Please complete the CAPTCHA.');
+      return;
+    }
+
     if (photo && hashtagList.length > 0 && locationConsent) {
 
       if (!navigator.geolocation) {
@@ -87,7 +96,7 @@ const PhotoUploadPage = () => {
         formData.append('hashtags', JSON.stringify(hashtagList));
         formData.append('latitude', latitude);
         formData.append('longitude', longitude);
-
+        formData.append('captcha', captchaValue);
 
         setLoading(true);
 
@@ -187,6 +196,13 @@ const PhotoUploadPage = () => {
               </button>
             </div>
           ))}
+        </div>
+
+        <div className="captcha-container">
+          <ReCAPTCHA
+            sitekey={CAPTCHA_SITE_KEY}
+            onChange={(value) => setCaptchaValue(value)}
+          />
         </div>
 
         <button type="submit" disabled={loading}>

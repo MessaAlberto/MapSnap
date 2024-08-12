@@ -1,7 +1,9 @@
 import AuthForm from 'components/AuthForm';
+import { CAPTCHA_SITE_KEY } from 'constants';
 import { authContext } from 'contexts/auth';
 import { UtilsContext } from 'contexts/utilsProvider';
 import React, { useContext, useRef, useState } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
 import 'style/pages/AuthPage.scss';
 
 const SignUp = () => {
@@ -13,17 +15,23 @@ const SignUp = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState(null);
+  const [captchaValue, setCaptchaValue] = useState(null);
   
   let timeOut = useRef(null);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
     try {
+      setError(null);
+      if (!captchaValue) {
+        setError('Please complete the CAPTCHA.');
+        return;
+      }
       if (!validateFields()) {
         return;
       }
 
-      const res = await register({ username, email, password })
+      const res = await register({ username, email, password, captcha: captchaValue });
       if (res.status === 422) {
         setError('Email is invalid or already taken.');
         return;
@@ -32,6 +40,10 @@ const SignUp = () => {
       console.error('Error registering user:', error.message);
       setError('Error registering user. Please try again later.');
     }
+  };
+
+  const handleCaptchaChange = (value) => {
+    setCaptchaValue(value);
   };
 
   const validateFields = () => {
@@ -135,6 +147,7 @@ const SignUp = () => {
       actionText="Already have an account?"
       actionLink={`${appRoutes.LOGIN}`}
       actionLinkText='Login here'
+      captcha={<ReCAPTCHA sitekey={CAPTCHA_SITE_KEY} size="compact" onChange={handleCaptchaChange} />}
     />
   );
 };

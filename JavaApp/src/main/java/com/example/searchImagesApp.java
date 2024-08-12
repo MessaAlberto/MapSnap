@@ -130,7 +130,8 @@ public class searchImagesApp {
                         System.out.println("User disconnected: " + socketId);
                         mqttClient.unsubscribe(socketId + "/find_images");
                         mqttClient.unsubscribe(socketId + "/user");
-                        System.out.println("Unsubscribed from " + socketId + "/find_images and /user for user " + socketId);
+                        System.out.println(
+                                "Unsubscribed from " + socketId + "/find_images and /user for user " + socketId);
                     } else {
                         System.out.println("User " + socketId + " not found in socketIdSet");
                     }
@@ -201,12 +202,12 @@ public class searchImagesApp {
         String query = "SELECT username FROM users WHERE id_usr = ?";
         executeQueryWithResult(socketId, requestId, jsonMessage, query, jsonMessage.getInt("id_usr"));
     }
-    
+
     private void processGetUserByUsername(String socketId, JSONObject jsonMessage, String requestId) {
         String query = "SELECT * FROM users WHERE username = ?";
         executeQueryWithResult(socketId, requestId, jsonMessage, query, jsonMessage.getString("username"));
     }
-    
+
     private void processUpdateRefreshToken(String socketId, JSONObject jsonMessage, String requestId) {
         System.out.println("\nmessage: " + jsonMessage);
         String query = "UPDATE users SET refresh_token = ? WHERE id_usr = ?";
@@ -219,12 +220,12 @@ public class searchImagesApp {
             }
         });
     }
-    
+
     private void processGetUserByEmail(String socketId, JSONObject jsonMessage, String requestId) {
         String query = "SELECT id_usr FROM users WHERE email = ?";
         executeQueryWithResult(socketId, requestId, jsonMessage, query, jsonMessage.getString("email"));
     }
-    
+
     private void processRegisterUser(String socketId, JSONObject jsonMessage, String requestId) {
         String query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
         try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
@@ -232,10 +233,10 @@ public class searchImagesApp {
             pstmt.setString(2, jsonMessage.getString("email"));
             pstmt.setString(3, jsonMessage.getString("password"));
             int affectedRows = pstmt.executeUpdate();
-            
+
             JSONObject response = new JSONObject();
             response.put("requestId", requestId);
-            
+
             if (affectedRows > 0) {
                 response.put("status", "success");
             } else {
@@ -243,21 +244,21 @@ public class searchImagesApp {
                 response.put("status", "error");
                 response.put("message", "Failed to register user.");
             }
-            
+
             publishMessage(socketId + "/user/response", response);
         } catch (SQLException e) {
             e.printStackTrace();
             JSONObject response = new JSONObject();
             response.put("status", "error");
             response.put("requestId", requestId);
-            
+
             // Check if the error is due to a unique constraint violation
             if (e.getSQLState().equals("23505")) { // PostgreSQL specific SQL state for unique violation
                 response.put("message", "Email already exists.");
             } else {
                 response.put("message", "An unexpected error occurred.");
             }
-            
+
             try {
                 publishMessage(socketId + "/user/response", response);
             } catch (MqttException mqttException) {
@@ -276,7 +277,6 @@ public class searchImagesApp {
             }
         }
     }
-    
 
     private void processGetUserById(String socketId, JSONObject jsonMessage, String requestId) {
         String query = "SELECT username, email, refresh_token FROM users WHERE id_usr = ?";
@@ -297,7 +297,7 @@ public class searchImagesApp {
             e.printStackTrace();
         }
     }
-    
+
     private void publishMessage(String topic, JSONObject response) throws MqttException {
         mqttClient.publish(topic, new MqttMessage(response.toString().getBytes()));
     }
@@ -324,36 +324,36 @@ public class searchImagesApp {
         }
     }
 
-    private void executeQueryWithResult(String socketId, String requestId, JSONObject jsonMessage, String query, Object parameterValue) {
-    try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
-        pstmt.setObject(1, parameterValue);
-        ResultSet resultSet = pstmt.executeQuery();
-        if (resultSet.next()) {
-            JSONObject response = new JSONObject();
-            ResultSetMetaData metaData = resultSet.getMetaData();
-            int columnCount = metaData.getColumnCount();
-            for (int i = 1; i <= columnCount; i++) {
-                String columnName = metaData.getColumnName(i);
-                Object columnValue = resultSet.getObject(i);
-                response.put(columnName, columnValue);
+    private void executeQueryWithResult(String socketId, String requestId, JSONObject jsonMessage, String query,
+            Object parameterValue) {
+        try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
+            pstmt.setObject(1, parameterValue);
+            ResultSet resultSet = pstmt.executeQuery();
+            if (resultSet.next()) {
+                JSONObject response = new JSONObject();
+                ResultSetMetaData metaData = resultSet.getMetaData();
+                int columnCount = metaData.getColumnCount();
+                for (int i = 1; i <= columnCount; i++) {
+                    String columnName = metaData.getColumnName(i);
+                    Object columnValue = resultSet.getObject(i);
+                    response.put(columnName, columnValue);
+                }
+                response.put("requestId", requestId);
+                publishMessage(socketId + "/user/response", response);
+                System.out.println("Sending response to user " + socketId + ": " + response);
+            } else {
+                System.err.println("No result found for query: " + query);
+                JSONArray emptyArray = new JSONArray();
+                JSONObject response = new JSONObject();
+                response.put("requestId", requestId);
+                response.put("status", "not_found");
+                response.put("data", emptyArray);
+                publishMessage(socketId + "/user/response", response);
             }
-            response.put("requestId", requestId);
-            publishMessage(socketId + "/user/response", response);
-            System.out.println("Sending response to user " + socketId + ": " + response);
-        } else {
-            System.err.println("No result found for query: " + query);
-            JSONArray emptyArray = new JSONArray();
-            JSONObject response = new JSONObject();
-            response.put("requestId", requestId);
-            response.put("status", "not_found");
-            response.put("data", emptyArray);
-            publishMessage(socketId + "/user/response", response);
+        } catch (SQLException | MqttException e) {
+            e.printStackTrace();
         }
-    } catch (SQLException | MqttException e) {
-        e.printStackTrace();
     }
-}
-
 
     private JSONArray findImagesByUserId(Integer userId) {
         String query = "SELECT i.id_ima, i.latitude, i.longitude, u.username " +
@@ -382,15 +382,26 @@ public class searchImagesApp {
             double topRightLat = topRightObject.getDouble("lat");
 
             String topicInput = jsonMessage.getString("topic");
-
             String query = "SELECT i.id_ima, i.latitude, i.longitude, u.username " +
                     "FROM images i " +
                     "JOIN image_topic it ON i.id_ima = it.idr_ima " +
                     "JOIN topics t ON it.idr_top = t.id_top " +
                     "JOIN users u ON i.owner_id = u.id_usr " +
                     "WHERE i.latitude BETWEEN ? AND ? " +
-                    "AND i.longitude BETWEEN ? AND ? " +
-                    "AND t.name = ?";
+                    "AND i.longitude BETWEEN ? AND ? ";
+
+            if (topicInput.length() < 4) {
+                query += "AND t.name = ?";
+            } else {
+                query += "AND t.name ILIKE ?";
+                topicInput = '%' + topicInput + '%';
+                System.out.println("\n\ntopicInput: " + topicInput);
+                System.out.println("bottomLeftLat: " + bottomLeftLat);
+                System.out.println("topRightLat: " + topRightLat);
+                System.out.println("bottomLeftLong: " + bottomLeftLong);
+                System.out.println("topRightLong: " + topRightLong);
+                System.out.println("query: " + query);
+            }
 
             try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
                 pstmt.setDouble(1, bottomLeftLat);
@@ -610,4 +621,3 @@ public class searchImagesApp {
         new searchImagesApp();
     }
 }
-
