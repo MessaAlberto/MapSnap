@@ -6,11 +6,7 @@ task:
 - [x] controllare validità dati nei server e javaApp
 - [x] change everywhere photo in image or viceversa
 
-- [x] spostare db degli user in javaapp, perchè ora socket è stabile per tutta sessione e gli eventi gestibili facilmente
 - [x] like/dislike
-- [x] mobile css
-- [x] deployare app
-- [x] sistemare ricerca camelCase, parti di parole
 
 
 
