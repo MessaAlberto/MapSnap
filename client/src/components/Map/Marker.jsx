@@ -82,7 +82,11 @@ const checkClusterOverlap = () => {
 };
 
 export const addMarker = (map, id, lon, lat, owner_username, topics, imageBase64, onClick) => {
-  if (markerMap.has(id)) return;
+  if (markerMap.has(id)) {
+    console.log('Marker with ID:', id, 'already exists');
+    console.log('Marker map:', markerMap);
+    return;
+  }
 
   const markerElement = document.createElement('div');
   markerElement.className = 'marker';
@@ -117,6 +121,7 @@ export const addMarker = (map, id, lon, lat, owner_username, topics, imageBase64
   map.addOverlay(overlay);
   overlay.setPosition(fromLonLat([lon, lat]));
   markerMap.set(id, overlay);
+  console.log('Marker map:', markerMap);
 
   markerElement.addEventListener('click', () => onClick({ imageId: id, owner_username, topics, imageBase64 }));
 

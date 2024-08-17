@@ -18,6 +18,7 @@ export async function fetchWithSocketId(url, options = {}) {
 export const UtilsProvider = ({ children }) => {
   const [searchTopic, setSearchTopic] = useState('');
   const [searchPlace, setSearchPlace] = useState('');
+  const [searchTimestamp, setSearchTimestamp] = useState(Date.now());
 
   return (
     <UtilsContext.Provider value={{
@@ -27,6 +28,8 @@ export const UtilsProvider = ({ children }) => {
       setSearchTopic,
       searchPlace,
       setSearchPlace,
+      searchTimestamp,
+      setSearchTimestamp,
       fetchWithSocketId,
     }}>
       {children}
