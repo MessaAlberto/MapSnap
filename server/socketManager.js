@@ -38,14 +38,15 @@ function findImagesOnMap(socket, data) {
   const parsedData = JSON.parse(data.message);
   const bottomLeft = [parsedData.bottomLeft.lon, parsedData.bottomLeft.lat];
   const topRight = [parsedData.topRight.lon, parsedData.topRight.lat];
-  const topic = parsedData.topic;
+  const topic = parsedData.topic.toLowerCase();
+  console.log('Received search request on topic:', topic);
 
   console.log('Received search request on topic:', parsedData.topic);
-  socketClientMap[socket.id].lastTopic = topic;
+  socketClientMap[socket.id].lastTopic = topic.toLowerCase();
 
   // const expandedCoordinates = expandCoordinates(bottomLeft, topRight);
   // const request = {
-  //   topic: parsedData.topic,
+  //   topic: topic,
   //   bottomLeft: {
   //     lon: expandedCoordinates.bottomLeft[0],
   //     lat: expandedCoordinates.bottomLeft[1]
@@ -57,7 +58,7 @@ function findImagesOnMap(socket, data) {
   // };
 
   const request = {
-    topic: parsedData.topic,
+    topic: topic,
     bottomLeft: {
       lon: bottomLeft[0],
       lat: bottomLeft[1]

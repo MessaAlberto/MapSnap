@@ -44,6 +44,10 @@ router.post('/login', async (req, res) => {
     const user = await mqttRequest(`${socketId}/user`, { req: 'getUserByUsername', username });
     console.log('User:', user);
 
+    if (user.status && user.status === 'not_found') {
+      return res.status(401).send('Invalid credentials');
+    }
+
     if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(401).send('Invalid credentials');
     }
@@ -59,8 +63,8 @@ router.post('/login', async (req, res) => {
       return res.status(500).send('Error updating refresh token');
     }
 
-    res.cookie('accessToken', accessToken, { httpOnly: true, secure: false, maxAge: ms(expireToken) });
-    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: false, maxAge: ms(expireRefresh) });
+    res.cookie('accessToken', accessToken, { httpOnly: true, secure: true, maxAge: ms(expireToken) });
+    res.cookie('refreshToken', refreshToken, { httpOnly: true, secure: true, maxAge: ms(expireRefresh) });
 
     res.status(200).json({ user: { id: user.id_usr, username: user.username } });
   } catch (err) {

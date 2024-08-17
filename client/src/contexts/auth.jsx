@@ -15,7 +15,7 @@ export function AuthProvider({ children }) {
     // Check if the token is valid on component mount
     async function checkAuth() {
       try {
-        console.log('Make uth request:', localStorage.getItem('socketId'));
+        console.log('Make auth request:', localStorage.getItem('socketId'));
         const res = await fetchWithSocketId(apiRoutes.CHECK_AUTH, {
           method: 'GET',
           headers: { 'x-socket-id': localStorage.getItem('socketId') },
@@ -75,7 +75,6 @@ export function AuthProvider({ children }) {
 
       const data = await res.json();
       setCurrentUser(data.user);
-      // window.location.reload();
       return res;
     } catch (error) {
       console.error('Error during login:', error.message);
@@ -106,7 +105,9 @@ export function AuthProvider({ children }) {
   };
 
   async function logout() {
+    console.log('currentUser:', currentUser);
     setCurrentUser(null);
+    console.log('currentUser:', currentUser);
     try {
       const res = await fetchWithSocketId(apiRoutes.LOGOUT, {
         method: 'POST',

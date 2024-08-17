@@ -62,6 +62,7 @@ const MyPhoto = () => {
       fetchPhotos();
 
       return () => {
+        console.log('Unregistering event handler for images_data');
         unregisterEventHandler('images_data');
       };
     }

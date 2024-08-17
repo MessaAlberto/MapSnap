@@ -4,14 +4,15 @@ const fs = require('fs').promises;
 const multer = require('multer');
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-const { uploadPhotoMQTT, removePhotoFromMQTT, getImaByOwnerId } = require('../../mqttManager');
+const { uploadPhotoMQTT, removePhotoFromMQTT, getImaByOwnerId} = require('../../mqttManager');
 const { socketClientMap } = require('../../socketManager');
 const { uploadPhotoToS3, deletePhotoFromS3 } = require('../../s3Manager');
 const { verifyRecaptcha } = require('../authentication/recaptcha');
 
 router.post('/', upload.single('photo'), async (req, res) => {
+  const socketId = req.headers['x-socket-id'];
   const photo = req.file;
-  const hashtags = JSON.parse(req.body.hashtags);
+  let hashtags = JSON.parse(req.body.hashtags);
   const latitude = req.body.latitude;
   const longitude = req.body.longitude;
   const captcha = req.body.captcha;
@@ -31,16 +32,16 @@ router.post('/', upload.single('photo'), async (req, res) => {
     return res.status(400).send('Invalid photo or hashtags');
   }
 
-  hashtags.forEach(hashtag => {
-    hashtag = hashtag.trim();
-    hashtag = hashtag.toLowerCase();
-    if (hashtag.length > 15) {
+  hashtags = hashtags.map(hashtag => {
+    hashtag = hashtag.trim().toLowerCase().replace(/\s+/g, '');
+    if (hashtag.length > 15 || !/^[a-z0-9_]+$/.test(hashtag)) {
       return res.status(400).send('Invalid photo or hashtags');
     }
+    return hashtag;
   });
 
   try {
-    const photoBase64 = photo.buffer.toString('base64');
+    const imageBase64 = photo.buffer.toString('base64');
     const payload = {
       hashtags,
       latitude,
@@ -62,7 +63,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
     }
 
     // Upload the photo to S3
-    const uploadSuccess = await uploadPhotoToS3(photoBase64, imageId);
+    const uploadSuccess = await uploadPhotoToS3(imageBase64, imageId);
     if (!uploadSuccess) {
       try {
         const removalResult = await removePhotoFromMQTT(imageId, userId);
@@ -73,8 +74,16 @@ router.post('/', upload.single('photo'), async (req, res) => {
       return res.status(500).send('Upload failed');
     }
 
-    res.status(200).send({ ...result, s3Upload: uploadSuccess });
-    console.log('result', result);
+    const postedPhoto = {
+      imageBase64,
+      topics: hashtags,
+      imageId,
+      lat: latitude,
+      lon: longitude,
+    }
+    console.log('postedPhoto: ', postedPhoto);
+
+    res.status(200).send({ ...result, s3Upload: uploadSuccess, postedPhoto });
     console.log('uploadSuccess', uploadSuccess);
   } catch (error) {
     console.error('Error:', error);

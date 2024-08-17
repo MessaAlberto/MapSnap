@@ -5,15 +5,16 @@ import { UtilsContext } from 'contexts/utilsProvider';
 import React, { useMemo, useState } from 'react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { useLocation, useNavigate } from 'react-router-dom';
-import 'style/pages/PhotoUpload.scss';
+import 'style/pages/UploadPhoto.scss';
 
 const PhotoUploadPage = () => {
-  const { apiRoutes } = React.useContext(UtilsContext);
+  const { apiRoutes, appRoutes, fetchWithSocketId } = React.useContext(UtilsContext);
   const navigate = useNavigate();
   const location = useLocation();
-  const { returnTo } = location.state || {}; 
+  const { returnTo } = location.state || {};
 
   const [photo, setPhoto] = useState(null);
+  const [uploadedPhoto, setUploadedPhoto] = useState(null);
   const [hashtags, setHashtags] = useState([]);
   const [hashtagInput, setHashtagInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -43,21 +44,29 @@ const PhotoUploadPage = () => {
   };
 
   const handleAddHashtag = () => {
-    const trimmedHashtag = hashtagInput.trim();
+    const normalizedHashtag = hashtagInput.toLowerCase().replace(/\s+/g, '').replace(/[^a-z0-9_]/g, '');
+
+    if (normalizedHashtag.length === 0) {
+      alert('Invalid hashtag. Please use letters, numbers, or underscores only.');
+      return;
+    }
+
+    if (normalizedHashtag.length > 15) {
+      alert('Hashtags should be 15 characters or less.');
+      return;
+    }
 
     if (hashtags.length >= 5) {
       alert('You can add a maximum of 5 hashtags.');
       return;
     }
 
-    if (trimmedHashtag !== '' && !hashtags.includes('#' + trimmedHashtag) && trimmedHashtag.length <= 15) {
-      setHashtags([...hashtags, '#' + trimmedHashtag]);
+    if (!hashtags.includes('#' + normalizedHashtag)) {
+      setHashtags([...hashtags, '#' + normalizedHashtag]);
       setHashtagInput('');
-    } else if (trimmedHashtag.length > 15) {
-      alert('Hashtag must be 15 characters or less.');
     } else {
+      alert('This hashtag already exists.');
       setHashtagInput('');
-      console.error('Hashtag already exists or is invalid');
     }
   };
 
@@ -101,7 +110,7 @@ const PhotoUploadPage = () => {
         setLoading(true);
 
         try {
-          const response = await fetch(apiRoutes.PHOTO, {
+          const response = await fetchWithSocketId(apiRoutes.PHOTO, {
             method: 'POST',
             body: formData,
           });
@@ -110,6 +119,13 @@ const PhotoUploadPage = () => {
 
           if (response.ok) {
             console.log('Photo and hashtags submitted successfully!');
+
+            const photoData = await response.json();
+            const user = JSON.parse(localStorage.getItem('user'));
+
+            photoData.postedPhoto.owner_username = user?.username;
+            console.log('photoData.result.imageId', photoData.postedPhoto);
+            setUploadedPhoto(photoData.postedPhoto);
             setPhoto(null);
             setHashtags([]);
             setHashtagInput('');
@@ -144,7 +160,11 @@ const PhotoUploadPage = () => {
     navigate(returnTo || '/');
   };
 
-  const closePopup = () => {
+  const showPhoto = (uploadedPhoto) => {
+    navigate(appRoutes.HOME, { state: { photo: uploadedPhoto } });
+  };
+
+  const closePopup = (photo) => {
     setShowPopup(false);
   };
 
@@ -222,7 +242,10 @@ const PhotoUploadPage = () => {
           <div className="popup-content">
             <h2>Success!</h2>
             <p>Your photo has been uploaded successfully.</p>
-            <button onClick={closePopup}>Close</button>
+            <div className='button-container'>
+              <button onClick={() => showPhoto(uploadedPhoto)}>Show photo</button>
+              <button onClick={closePopup}>Close</button>
+            </div>
           </div>
         </div>
       )}

@@ -165,12 +165,11 @@ function getImaByOwnerId(userId, socketId) {
   return publish(socketId + '/find_images', { userId });
 }
 
-
 module.exports = {
-  getImaByOwnerId,
   uploadPhotoMQTT,
   setupMQTTConnection,
   removePhotoFromMQTT,
   publish,
   mqttRequest,
+  getImaByOwnerId,
 };

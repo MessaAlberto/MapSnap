@@ -32,7 +32,7 @@ const authenticateToken = async (req, res, next) => {
       req.user = { _id: decodedRefreshToken._id };
       next();
     } catch (err) {
-      return res.status(403).send('Invalid refresdddddh token');
+      return res.status(403).send('Invalid refresdddddh token: ' + err);
     }
   };
 

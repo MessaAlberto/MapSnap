@@ -43,8 +43,7 @@ const Login = () => {
         return;
       }
       const res = await login({ username, password, captcha: captchaValue });
-      console.log('res per login: ', res);
-      console.log('res.status per login: ', res.status);
+      console.log('res.status for login: ', res.status);
       if (res.status === 401) {
         setError('Invalid credentials. Please try again.');
         return;
