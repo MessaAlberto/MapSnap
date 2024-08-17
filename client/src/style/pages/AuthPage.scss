@@ -1,17 +1,17 @@
 .auth-page {
+  position: relative;
   font-family: 'Arial', sans-serif;
-  background: radial-gradient(ellipse at bottom right, rgba(26, 89, 116, 0.4) 10%, rgba(138, 114, 76, 0) 40%), linear-gradient(to top, rgba(129, 185, 207, 0.25), rgba(42, 60, 87, 0.4)), linear-gradient(135deg, #701c00, #092756);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh;
+  padding: 3rem 0;
 
   h1 {
     text-align: center;
     font-size: 2.25rem;
     font-weight: 700;
-    margin-top: 3.125rem;
+    // margin-top: 3.125rem;
     text-shadow: 0.125rem 0.125rem 0.25rem rgba(0, 0, 0, 0.5);
     letter-spacing: 0.125rem;
     color: #fff;

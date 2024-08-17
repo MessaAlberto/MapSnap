@@ -10,7 +10,7 @@ $message-display-duration: 0.5s;
   position: absolute;
   top: 0;
   width: 100%;
-  height: 100%;
+  height: 100svh;
   transition: width 0.3s ease, left 0.3s ease;
   z-index: 0;
 }

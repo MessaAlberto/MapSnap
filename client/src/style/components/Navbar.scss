@@ -37,26 +37,21 @@ nav {
   z-index: $sidebar-z-index;
   box-shadow: $sidebar-box-shadow;
 
-  &:hover {
+  &.navbar-expanded{
     width: calc(#{$sidebar-width} * 4);
+    background: $sidebar-background-color;
 
-    .home-item {
-      width: calc(#{$sidebar-width} * 4);
-    }
-
+    .home-item,
     .logout-item {
       width: calc(#{$sidebar-width} * 4);
     }
   }
 
   // when not hovered
-  &:not(:hover) {
+  &:not(.navbar-expanded):not(:hover) {
 
     // disable menu-item
-    .menu-input {
-      display: none;
-    }
-
+    .menu-input,
     .start-research {
       display: none;
     }
@@ -175,7 +170,6 @@ nav {
       width: 80% !important;
       height: $input-height;
       padding-left: $input-margin;
-      padding-right: $input-margin;
       margin-right: $input-margin;
       gap: $input-margin;
       border: none;
@@ -200,6 +194,13 @@ nav {
         &:hover {
           cursor: text;
         }
+      }
+
+      .start-research {
+        border: 2px solid $sidebar-background-color;
+        padding: 0.1rem;
+        margin: 0.25rem;
+        border-radius: $input-border-radius;
       }
     }
 

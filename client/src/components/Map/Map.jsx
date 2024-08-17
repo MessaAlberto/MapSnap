@@ -27,7 +27,7 @@ const MapComponent = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [popupData, setPopupData] = useState(null);
   const [noPhotosMessage, setNoPhotosMessage] = useState(''); 
-  const { searchTopic, searchPlace, appRoutes } = useContext(UtilsContext);
+  const { searchTopic, setSearchTopic, searchPlace, searchTimestamp, appRoutes } = useContext(UtilsContext);
   const { currentUser } = useContext(authContext);
   const socket = useContext(SocketContext);
   const location = useLocation();
@@ -71,6 +71,8 @@ const MapComponent = () => {
     mapRef.current = map;
     searchTopicRef.current = searchTopic;
 
+    clearMapImages(mapRef.current);
+
     const debouncedSendSearchRequest = debounce(() => {
       if (searchTopicRef.current === '') {
         setIsSearching(false);
@@ -86,7 +88,6 @@ const MapComponent = () => {
     });
 
     if (location.state && location.state.photo) {
-      console.log('Location state:', location.state);
       const { photo } = location.state;
       const coordinates = fromLonLat([photo.lon, photo.lat]);
       map.getView().animate({ center: coordinates, zoom: 15 });
@@ -98,6 +99,7 @@ const MapComponent = () => {
     return () => {
       map.setTarget(null);
       mapRef.current = null;
+      setSearchTopic('');
       searchTopicRef.current = '';
       setIsSearching(false);
       setPopupData(null);
@@ -112,15 +114,15 @@ const MapComponent = () => {
       return;
     }
     setIsSearching(true);
-    clearMapImages(mapRef.current);
-    sendSearchRequest(mapRef.current, searchTopic);
-  }, [searchTopic]);
+    refreshMap();
+  }, [searchTopic, searchTimestamp]);
 
   useEffect(() => {
     if (searchPlace) {
       geocodeAndCenterMap(searchPlace, mapRef.current);
+      setSearchTopic('');
     }
-  }, [searchPlace]);
+  }, [searchPlace, searchTimestamp]);
 
   const handleMqttMessage = (data) => {
     setIsSearching(false);

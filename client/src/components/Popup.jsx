@@ -15,8 +15,6 @@ const Popup = ({
 
   const { apiRoutes } = React.useContext(UtilsContext);
   const [isDeleting, setIsDeleting] = useState(false);
-  console.log('Popup data:', data);
-  console.log('Popup currentUser:', currentUser);
   const ownerDisplayName = currentUser && data.owner_username === currentUser.username ? 'You' : data.owner_username;
   const isOwner = currentUser && data.owner_username === currentUser.username;
 
