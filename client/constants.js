@@ -17,7 +17,6 @@ export const APP_ROUTES = {
   SIGNUP: '/signup',
   UPLOAD_PHOTO: '/upload-photo',
   MY_PHOTO: '/my-photo',
-  MAP_SNAP: '/map-snap',
 };
 
 export const EXPRESS_SERVER_API = import.meta.env.VITE_EXPRESS_SOCKET_URL;
