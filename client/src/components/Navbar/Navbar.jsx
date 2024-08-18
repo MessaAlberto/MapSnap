@@ -13,11 +13,12 @@ import UserMenuItem from './UserMenuItem';
 
 export default function Navbar({ onInfoClick }) {
   const { currentUser } = useContext(authContext);
+  const { appRoutes } = useContext(UtilsContext);
   const { searchTopic, setSearchTopic, searchPlace, setSearchPlace, setSearchTimestamp } = useContext(UtilsContext);
   const { pathname } = useLocation();
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const excludedPages = ['/login', '/signup', '/upload-photo', '/my-photo'];
+  const excludedPages = [appRoutes.LOGIN, appRoutes.SIGNUP, appRoutes.UPLOAD_PHOTO, appRoutes.MY_PHOTO];
   const showInputMenuItems = !excludedPages.includes(pathname);
   const showImagesMenuItem = !excludedPages.slice(0, 2).includes(pathname);
 

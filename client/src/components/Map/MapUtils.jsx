@@ -1,15 +1,22 @@
 import axios from 'axios';
 import { getBottomLeft, getTopRight } from 'ol/extent';
 import { fromLonLat, toLonLat } from 'ol/proj';
-import { MapSearchRequest } from 'socketManager';
+import { mapSearchRequest } from 'socketManager';
 
-export const sendSearchRequest = (map, searchTopic) => {
+const getMapExtentCoorinates = (map) => {
   const view = map.getView();
   if (!view) return;
 
   const extent = view.calculateExtent(map.getSize());
-  const bottomLeft = toLonLat(getBottomLeft(extent));
-  const topRight = toLonLat(getTopRight(extent));
+  return {
+    bottomLeft: toLonLat(getBottomLeft(extent)),
+    topRight: toLonLat(getTopRight(extent)),
+  };
+};
+
+export const sendSearchRequest = (map, searchTopic) => {
+  console.log('Sending search request:', searchTopic);
+  const { bottomLeft, topRight } = getMapExtentCoorinates(map);
 
   const message = {
     topic: searchTopic,
@@ -17,7 +24,19 @@ export const sendSearchRequest = (map, searchTopic) => {
     topRight: { lon: topRight[0], lat: topRight[1] },
   };
 
-  MapSearchRequest(JSON.stringify(message));
+  mapSearchRequest(JSON.stringify(message));
+};
+
+export const sendRandomSearchRequest = (map) => {
+  const { bottomLeft, topRight } = getMapExtentCoorinates(map);
+
+  const message = {
+    randomResearch: true,
+    bottomLeft: { lon: bottomLeft[0], lat: bottomLeft[1] },
+    topRight: { lon: topRight[0], lat: topRight[1] },
+  };
+
+  mapSearchRequest(JSON.stringify(message));
 };
 
 export const geocodeAndCenterMap = async (place, map) => {

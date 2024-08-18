@@ -1,4 +1,4 @@
-import { faCircleNotch } from '@fortawesome/free-solid-svg-icons';
+import { faCircleNotch, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import AddPhotoButton from 'components/AddPhotoButton';
 import Popup from 'components/Popup';
@@ -16,7 +16,7 @@ import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { registerEventHandler, unregisterEventHandler } from 'socketManager';
 import 'style/components/Map.scss';
-import { geocodeAndCenterMap, sendSearchRequest } from './MapUtils';
+import { geocodeAndCenterMap, sendRandomSearchRequest, sendSearchRequest } from './MapUtils';
 import { addMarker, checkOverlayOverlap, clearMapImages } from './Marker';
 
 
@@ -26,7 +26,7 @@ const MapComponent = () => {
   const searchTopicRef = useRef('');
   const [isSearching, setIsSearching] = useState(false);
   const [popupData, setPopupData] = useState(null);
-  const [noPhotosMessage, setNoPhotosMessage] = useState(''); 
+  const [noPhotosMessage, setNoPhotosMessage] = useState('');
   const { searchTopic, setSearchTopic, searchPlace, searchTimestamp, appRoutes } = useContext(UtilsContext);
   const { currentUser } = useContext(authContext);
   const socket = useContext(SocketContext);
@@ -78,6 +78,7 @@ const MapComponent = () => {
         setIsSearching(false);
         return;
       }
+      console.log('Sending search request');
       setIsSearching(true);
       sendSearchRequest(mapRef.current, searchTopicRef.current);
     }, 300);
@@ -114,6 +115,7 @@ const MapComponent = () => {
       return;
     }
     setIsSearching(true);
+    setRandomSearchEnabled(false);
     refreshMap();
   }, [searchTopic, searchTimestamp]);
 
@@ -144,19 +146,45 @@ const MapComponent = () => {
     setPopupData(null);
   };
 
+  const clearSearchTopic = () => {
+    setSearchTopic('');
+    clearMapImages(mapRef.current);
+  };
+
+  const handleRandomSearchClick = () => {
+    console.log('Random search request');
+    setIsSearching(true);
+    clearMapImages(mapRef.current);
+    sendRandomSearchRequest(mapRef.current);
+  };
+
   return (
     <div className="map-container">
-      {searchTopic && <div className="topic-researched">Result for: #{searchTopic}</div>}
+      {searchTopic ? (
+        <div className="topic-researched">
+          Result for: #{searchTopic}
+          <button className="clear-topic-button" onClick={clearSearchTopic}>
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+        </div>
+      ) : (
+        <div className="random-research-container">
+          <span>Random Research</span>
+          <button onClick={handleRandomSearchClick} className="toggle-button">
+            Send
+          </button>
+        </div>
+      )}
       <div id="map" ref={mapDivRef} className="map"></div>
       <div id='spinner' className={`spinner ${isSearching ? 'visible' : 'hidden'}`}>
         <FontAwesomeIcon icon={faCircleNotch} spin size='xl' style={{ color: '#000000' }} />
       </div>
       <AddPhotoButton returnTo={appRoutes.HOME} />
-      {popupData && 
-        <Popup 
-          data={popupData} 
-          onClose={closePopup} 
-          currentUser={currentUser} 
+      {popupData &&
+        <Popup
+          data={popupData}
+          onClose={closePopup}
+          currentUser={currentUser}
           onDeleteSuccess={refreshMap}
         />
       }

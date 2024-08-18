@@ -2,11 +2,10 @@
 Explore the World through the Eyes of the Community.
 
 task:
-- [x] browser ddeve creare una sola socket, per client su Map.
 - [x] controllare validità dati nei server e javaApp
 - [x] change everywhere photo in image or viceversa
 
-- [x] like/dislike
+- [x] cambiare da find_images a socket_request. cambiare anche user in api_request. ha più senso perché cosi ogni user ha 2 tipi di comunicazione.
 
 
 

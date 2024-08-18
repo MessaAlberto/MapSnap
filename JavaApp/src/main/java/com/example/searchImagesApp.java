@@ -150,14 +150,21 @@ public class searchImagesApp {
         try {
             JSONObject jsonMessage = new JSONObject(message);
             Integer userId = jsonMessage.has("userId") ? jsonMessage.getInt("userId") : null;
+            Boolean randomResearch = jsonMessage.has("randomResearch") ? jsonMessage.getBoolean("randomResearch") : false;
 
             JSONArray imagesArray;
             JSONObject response = new JSONObject();
 
             if (userId != null) {
+                System.out.println("Search request by userId");
                 // Search Images request by userId
                 imagesArray = findImagesByUserId(userId);
+            } else if (randomResearch) {
+                System.out.println("Random search request");
+                imagesArray = findRandomImages(jsonMessage);
+                response.put("searchedForRandom", true);
             } else {
+                System.out.println("Search request for the map");
                 // Search Images request for the map
                 imagesArray = findImagesForMap(jsonMessage);
                 response.put("searchedForMap", true);
@@ -371,6 +378,42 @@ public class searchImagesApp {
         }
     }
 
+    private JSONArray findRandomImages(JSONObject jsonMessage) {
+        try {
+            JSONObject bottomLeftObject = jsonMessage.getJSONObject("bottomLeft");
+            double bottomLeftLong = bottomLeftObject.getDouble("lon");
+            double bottomLeftLat = bottomLeftObject.getDouble("lat");
+
+            JSONObject topRightObject = jsonMessage.getJSONObject("topRight");
+            double topRightLong = topRightObject.getDouble("lon");
+            double topRightLat = topRightObject.getDouble("lat");
+
+            String query = "SELECT i.id_ima, i.latitude, i.longitude, u.username " +
+                    "FROM images i " +
+                    "JOIN users u ON i.owner_id = u.id_usr " +
+                    "WHERE i.latitude BETWEEN ? AND ? " +
+                    "AND i.longitude BETWEEN ? AND ? " +
+                    "ORDER BY RANDOM() " +
+                    "LIMIT 10";
+
+            try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {
+                pstmt.setDouble(1, bottomLeftLat);
+                pstmt.setDouble(2, topRightLat);
+                pstmt.setDouble(3, bottomLeftLong);
+                pstmt.setDouble(4, topRightLong);
+
+                ResultSet resultSet = pstmt.executeQuery();
+                return extractImagesFromResultSet(resultSet);
+            } catch (SQLException e) {
+                e.printStackTrace();
+                return new JSONArray();
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return new JSONArray();
+        }
+    }
+
     private JSONArray findImagesForMap(JSONObject jsonMessage) {
         try {
             JSONObject bottomLeftObject = jsonMessage.getJSONObject("bottomLeft");
@@ -395,12 +438,6 @@ public class searchImagesApp {
             } else {
                 query += "AND t.name ILIKE ?";
                 topicInput = '%' + topicInput + '%';
-                System.out.println("\n\ntopicInput: " + topicInput);
-                System.out.println("bottomLeftLat: " + bottomLeftLat);
-                System.out.println("topRightLat: " + topRightLat);
-                System.out.println("bottomLeftLong: " + bottomLeftLong);
-                System.out.println("topRightLong: " + topRightLong);
-                System.out.println("query: " + query);
             }
 
             try (PreparedStatement pstmt = dbConnection.prepareStatement(query)) {

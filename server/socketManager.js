@@ -1,3 +1,4 @@
+const e = require('express');
 const { getFoldersContentsFromS3 } = require('./s3Manager');
 
 const socketClientMap = {};
@@ -17,7 +18,7 @@ function setupSocketIO(ioTosetUP, mqttClientToSetUP) {
     mqttClient.publish('userConnected', JSON.stringify({ id: socket.id }));
     mqttClient.subscribe(`${socket.id}/images_data`);
     mqttClient.subscribe(`${socket.id}/user/response`);
-    
+
     socket.on('map_search_request', async (data) => {
       findImagesOnMap(socket, data);
     });
@@ -38,36 +39,52 @@ function findImagesOnMap(socket, data) {
   const parsedData = JSON.parse(data.message);
   const bottomLeft = [parsedData.bottomLeft.lon, parsedData.bottomLeft.lat];
   const topRight = [parsedData.topRight.lon, parsedData.topRight.lat];
-  const topic = parsedData.topic.toLowerCase();
-  console.log('Received search request on topic:', topic);
+  const randomResearch = parsedData.randomResearch;
 
-  console.log('Received search request on topic:', parsedData.topic);
-  socketClientMap[socket.id].lastTopic = topic.toLowerCase();
+  let request = {};
+  if (randomResearch) {
+    console.log('Random search request: ', randomResearch);
+    request = {
+      randomResearch: true,
+      bottomLeft: {
+        lon: bottomLeft[0],
+        lat: bottomLeft[1]
+      },
+      topRight: {
+        lon: topRight[0],
+        lat: topRight[1]
+      },
+    };
+  } else {
+    console.log('Search request: ', parsedData.topic);
+    const topic = parsedData.topic.toLowerCase();
+    socketClientMap[socket.id].lastTopic = topic.toLowerCase();
 
-  // const expandedCoordinates = expandCoordinates(bottomLeft, topRight);
-  // const request = {
-  //   topic: topic,
-  //   bottomLeft: {
-  //     lon: expandedCoordinates.bottomLeft[0],
-  //     lat: expandedCoordinates.bottomLeft[1]
-  //   },
-  //   topRight: {
-  //     lon: expandedCoordinates.topRight[0],
-  //     lat: expandedCoordinates.topRight[1]
-  //   },
-  // };
+    // const expandedCoordinates = expandCoordinates(bottomLeft, topRight);
+    // const request = {
+    //   topic: topic,
+    //   bottomLeft: {
+    //     lon: expandedCoordinates.bottomLeft[0],
+    //     lat: expandedCoordinates.bottomLeft[1]
+    //   },
+    //   topRight: {
+    //     lon: expandedCoordinates.topRight[0],
+    //     lat: expandedCoordinates.topRight[1]
+    //   },
+    // };
 
-  const request = {
-    topic: topic,
-    bottomLeft: {
-      lon: bottomLeft[0],
-      lat: bottomLeft[1]
-    },
-    topRight: {
-      lon: topRight[0],
-      lat: topRight[1]
-    },
-  };
+    request = {
+      topic: topic,
+      bottomLeft: {
+        lon: bottomLeft[0],
+        lat: bottomLeft[1]
+      },
+      topRight: {
+        lon: topRight[0],
+        lat: topRight[1]
+      },
+    };
+  }
 
   const jsonString = JSON.stringify(request);
   console.log('MQTT publish, on topic:', socket.id + '/find_images');
@@ -99,7 +116,14 @@ async function handleImageData(topic, message) {
 
   try {
     let imageDataList = data.imageDataList;
-    const emitEvent = data.searchedForMap ? 'map_images' : 'images_data';
+    let emitEvent = '';
+
+    if (data.searchedForMap || data.searchedForRandom) {
+      emitEvent = 'map_images';
+    } else {
+      emitEvent = 'images_data';
+    }
+    console.log('Emit event:', emitEvent);
 
     if (imageDataList.length === 0) {
       console.log('No image data found');
@@ -129,13 +153,13 @@ async function handleImageData(topic, message) {
       console.log('Sending cached images:', completeCachedData.length);
       if (data.searchedForMap) {
         const lastTopic = socketClientMap[socketId].lastTopic;
-        const filteredCachedData = completeCachedData.filter(data => 
+        const filteredCachedData = completeCachedData.filter(data =>
           data.topics.some(topic => topic.includes(lastTopic))
         );
-        io.to(socketId).emit('map_images', filteredCachedData);
+        io.to(socketId).emit(emitEvent, filteredCachedData);
         console.log('imagesId:', filteredCachedData.map(data => data = data.imageId));
       } else {
-        io.to(socketId).emit('images_data', completeCachedData);
+        io.to(socketId).emit(emitEvent, completeCachedData);
         console.log('imagesId:', completeCachedData.map(data => data = data.imageId));
       }
     }
@@ -156,11 +180,10 @@ async function handleImageData(topic, message) {
 
         if (data.searchedForMap) {
           const lastTopic = socketClientMap[socketId].lastTopic;
-          const filteredData = updatedData.filter(data => 
+          const filteredData = updatedData.filter(data =>
             data.topics.some(topic => topic.includes(lastTopic))
           );
           io.to(socketId).emit(emitEvent, filteredData);
-          // console imageId of sended images
           console.log('imagesId filtered:', filteredData.map(data => data = data.imageId));
         } else {
           io.to(socketId).emit(emitEvent, updatedData);

@@ -52,10 +52,10 @@ export function unregisterEventHandler(event) {
 }
 
 
-export function MapSearchRequest(message) {
+export function mapSearchRequest(message) {
   if (socket) {
     socket.emit('map_search_request', { message });
   } else {
-    console.error('MapSearchRequest: Socket not initialized. Call setupSocketConnection first.');
+    console.error('mapSearchRequest: Socket not initialized. Call setupSocketConnection first.');
   }
 }
