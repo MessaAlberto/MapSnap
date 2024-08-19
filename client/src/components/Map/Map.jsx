@@ -115,7 +115,6 @@ const MapComponent = () => {
       return;
     }
     setIsSearching(true);
-    setRandomSearchEnabled(false);
     refreshMap();
   }, [searchTopic, searchTimestamp]);
 
