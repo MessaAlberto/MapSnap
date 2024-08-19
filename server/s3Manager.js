@@ -1,5 +1,8 @@
 const { S3Client, ListBucketsCommand, ListObjectsV2Command, GetObjectCommand, PutObjectCommand, DeleteObjectCommand} = require('@aws-sdk/client-s3');
 const { fromIni } = require('@aws-sdk/credential-provider-ini');
+require('dotenv').config();
+
+const S3_BUCKET_NAME = process.env.S3_BUCKET_NAME;
 
 // Configurazione client S3
 const s3Client = new S3Client({
@@ -22,7 +25,7 @@ async function testS3Connection() {
 async function getFoldersContentsFromS3(idList, onProgress) {
   const folderPromises = idList.map(async (id) => {
     const params = {
-      Bucket: 'mqtt-images-storage',
+      Bucket: S3_BUCKET_NAME,
       Prefix: `${id}/`
     };
 

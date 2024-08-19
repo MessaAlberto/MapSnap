@@ -20,4 +20,4 @@ export const APP_ROUTES = {
 };
 
 export const EXPRESS_SERVER_API = import.meta.env.VITE_EXPRESS_SOCKET_URL;
-export const CAPTCHA_SITE_KEY = import.meta.env.VITE_REACT_APP_SITE_KEY;
+export const CAPTCHA_SITE_KEY = import.meta.env.VITE_CAPTCHA_SITE_KEY;

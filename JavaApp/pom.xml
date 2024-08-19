@@ -72,7 +72,7 @@
             <manifest>
               <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
               <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-              <mainClass>com.example.searchImagesApp</mainClass>
+              <mainClass>com.example.JavaApp</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>

@@ -6,7 +6,7 @@ const LoginInfo = () => (
     <p>To access the application, please follow these steps:</p>
     <ol>
       <li>
-        <strong>Enter Your Credentials:</strong> Type your username and password into the input fields.
+        <strong>Enter Your Credentials:</strong> Type your username and password.
       </li>
       <li>
         <strong>Click 'Login':</strong> After entering your credentials, check the CAPTCHA and click the 'Login' button to access your account.

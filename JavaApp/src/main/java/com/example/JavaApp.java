@@ -25,14 +25,14 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class searchImagesApp {
+public class JavaApp {
     private Properties properties;
     protected IMqttClient mqttClient;
     protected Connection dbConnection;
     private ThreadPoolExecutor executorService = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     private Set<String> socketIdSet = new HashSet<>();
 
-    public searchImagesApp() throws IOException {
+    public JavaApp() throws IOException {
         loadProperties();
         connectToDatabase();
         try {
@@ -47,7 +47,7 @@ public class searchImagesApp {
 
     protected void loadProperties() throws IOException {
         properties = new Properties();
-        properties.load(searchImagesApp.class.getClassLoader().getResourceAsStream("config.properties"));
+        properties.load(JavaApp.class.getClassLoader().getResourceAsStream("config.properties"));
     }
 
     protected void connectToDatabase() {
@@ -655,6 +655,6 @@ public class searchImagesApp {
     }
 
     public static void main(String[] args) throws IOException {
-        new searchImagesApp();
+        new JavaApp();
     }
 }
