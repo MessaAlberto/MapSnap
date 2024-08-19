@@ -322,18 +322,45 @@ mqtt-images-storage
 ## Installation and Setup on EC2
 Follow the steps listed in the following link to install and configure the application on an AWS EC2 instance: [Deploying Full Stack Apps to AWS EC2](https://www.sammeechward.com/deploying-full-stack-js-to-aws-ec2)
 
-### 1. **Frontend Build**:
+### 1. **Configure .env File**
+ - **Client**: Create a `.env.production` file in the `client/` folder and add the following variables:
+    ```plaintext
+      VITE_EXPRESS_SOCKET_URL='wss://<your_ec2_public_ip>:3000'
+    ```
+  - **Server**: Create a `.env` file in the `server/` folder and enter the following variables:
+    ```plaintext
+      # JWT
+      JWT_SECRET_TOKEN=<your_secret_token>       # Generate a secret key
+      JWT_SECRET_REFRESH=<your_secret_refresh>   # Generate a secret key
+
+      JWT_EXPIRE_TOKEN=15m
+      JWT_EXPIRE_REFRESH=7d
+
+      # S3
+      S3_BUCKET_NAME=<your_bucket_name>         # Your Amazon S3 bucket name
+
+      # GOOGLE RECAPTCHA
+      RECAPTCHA_SECRET_KEY=<your_secret_key>    # Your reCAPTCHA secret key
+
+      # MQTT BROKER
+      MQTT_BROKER_IP=localhost
+      MQTT_BROKER_PORT=9001
+      MQTT_BROKER_USER=<your_mqtt_user>         # Previously created
+      MQTT_BROKER_PASS=<your_mqtt_password>     # Previously created
+    ```
+
+### 2. **Frontend Build**:
   Build the frontend in the `client/` directory:
    ```bash
    cd client 
    npm run build
   ```
 
-### 2. **Configuration of server/app.js:**
+### 3. **Configuration of server/app.js:**
   Ensure that lines 26 through 31 in the file [server/app.js](./server/app.js) are uncommented to use the static frontend files.
 
 
-### 3. **Transfer Files to EC2**:
+### 4. **Transfer Files to EC2**:
   - **Client**:
     ```bash
     rsync -avz -e "ssh -i mapsnap-webapp.pem" /mnt/<path>/<to>/<your>/<project>/MapSnap/client/dist ubuntu@ec2-35-159-31-228.eu-central-1.compute.amazonaws.com:/home/ubuntu/MapSnap/client
@@ -356,7 +383,7 @@ Follow the steps listed in the following link to install and configure the appli
   sudo chown ubuntu:ubuntu /home/ubuntu/.ssh/authorized_keys
   sudo systemctl restart ssh
   ```
-### 4. **Create the `MapSnap.service` file:**
+### 5. **Create the `MapSnap.service` file:**
 On your EC2 instance, create a service file for the Node.js server:
 ```bash
   sudo nano /etc/systemd/system/MapSnap.service
@@ -381,14 +408,14 @@ On your EC2 instance, create a service file for the Node.js server:
   [Install]
   WantedBy=multi-user.target
   ```
-### 5. **Installing Mosquitto on EC2:**
+### 6. **Installing Mosquitto on EC2:**
   Run the following commands to install Mosquitto:
   ```bash
     sudo apt update
     sudo apt upgrade
     sudo apt install mosquitto
   ```
-### 6. **Installing Java and Maven on EC2:**
+### 7. **Installing Java and Maven on EC2:**
   Run the following commands to install Java 21 and Maven:
    ```bash
   sudo apt update

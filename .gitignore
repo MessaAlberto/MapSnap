@@ -7,7 +7,7 @@ server/node_modules/
 client/node_modules/
 
 JavaApp/target/
-JavaApp/src/main/resources/config.properties
+# JavaApp/src/main/resources/config.properties
 JavaApp/src/test
 
 JavaApp-tcplocalhost1883
