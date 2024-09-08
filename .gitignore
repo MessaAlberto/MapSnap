@@ -1,13 +1,12 @@
-writers-avenue-main/
-
-TrentoJOB/
-
 server/node_modules/
-
 client/node_modules/
 
+server/.env
+client/.env
+client/.env.production
+
 JavaApp/target/
-# JavaApp/src/main/resources/config.properties
+JavaApp/src/main/resources/config.properties
 JavaApp/src/test
 
 JavaApp-tcplocalhost1883

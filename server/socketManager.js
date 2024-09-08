@@ -28,7 +28,7 @@ function setupSocketIO(ioTosetUP, mqttClientToSetUP) {
 
       mqttClient.publish('userDisconnected', JSON.stringify({ id: socket.id }));
       mqttClient.unsubscribe(socket.id + '/images_data');
-      mqttClient.unsubscribe(socket.id + '/user');
+      mqttClient.unsubscribe(socket.id + '/user/response');
       delete socketClientMap[socket.id];
       console.log('Active socket IDs:', Object.keys(socketClientMap));
     });
