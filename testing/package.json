@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-    "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+  "type": "module",
+  "scripts": {
+    "up": "node testUpload.js",
+    "del": "node testDelete.js",
+    "client": "node testClient.js"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +29,7 @@
     "pg": "^8.12.0",
     "pg-promise": "^11.8.0",
     "socket.io": "^4.7.5",
+    "socket.io-client": "^4.7.5",
     "uuid": "^10.0.0"
   },
   "devDependencies": {

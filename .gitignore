@@ -10,3 +10,6 @@ JavaApp/src/main/resources/config.properties
 JavaApp/src/test
 
 JavaApp-tcplocalhost1883
+
+testing/.env
+testing/node_modules/

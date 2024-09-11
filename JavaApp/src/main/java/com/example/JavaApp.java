@@ -74,6 +74,7 @@ public class JavaApp {
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setUserName(mqttUsername);
             connOpts.setPassword(mqttPassword.toCharArray());
+            connOpts.setKeepAliveInterval(60);
 
             mqttClient.connect(connOpts);
         } catch (MqttException e) {

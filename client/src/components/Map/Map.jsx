@@ -27,7 +27,7 @@ const MapComponent = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [popupData, setPopupData] = useState(null);
   const [noPhotosMessage, setNoPhotosMessage] = useState('');
-  const { searchTopic, setSearchTopic, searchPlace, searchTimestamp, appRoutes } = useContext(UtilsContext);
+  const { searchTopic, setSearchTopic, searchPlace, setSearchPlace, searchTimestamp, appRoutes } = useContext(UtilsContext);
   const { currentUser } = useContext(authContext);
   const socket = useContext(SocketContext);
   const location = useLocation();
@@ -121,7 +121,7 @@ const MapComponent = () => {
   useEffect(() => {
     if (searchPlace) {
       geocodeAndCenterMap(searchPlace, mapRef.current);
-      setSearchTopic('');
+      setSearchPlace('');
     }
   }, [searchPlace, searchTimestamp]);
 
